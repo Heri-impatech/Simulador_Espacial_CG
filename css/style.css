@@ -1,0 +1,209 @@
+/* style.css */
+
+:root {
+    --space-black: #030305;
+    --hud-bg: rgba(10, 12, 18, 0.75);
+    --hud-border: rgba(0, 210, 255, 0.2);
+    --neon-cyan: #00d2ff;
+    --neon-orange: #ff9f43;
+    --neon-red: #ff4d4d;
+    --text-primary: #e0e6ed;
+    --text-muted: #8492a6;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--space-black);
+    color: var(--text-primary);
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Canvas ocupa o fundo inteiro da tela */
+#cosmosCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: grab;
+}
+#cosmosCanvas:active {
+    cursor: grabbing;
+}
+
+/* Painel HUD Lateral Flutuante */
+#hud-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 320px;
+    max-height: calc(100vh - 40px);
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    border-radius: 6px;
+    padding: 20px;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.05);
+    backdrop-filter: blur(10px);
+    overflow-y: auto;
+}
+
+/* Scrollbar Personalizada para o Painel HUD */
+#hud-panel::-webkit-scrollbar { width: 4px; }
+#hud-panel::-webkit-scrollbar-thumb { background: var(--hud-border); border-radius: 2px; }
+
+h2 {
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    color: var(--neon-cyan);
+    margin-bottom: 5px;
+    text-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+}
+
+h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    border-left: 2px solid var(--neon-cyan);
+    padding-left: 6px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #2ecc71;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.control-group {
+    margin-bottom: 20px;
+    border-bottom: 1px dashed rgba(132, 146, 166, 0.2);
+    padding-bottom: 15px;
+}
+.control-group:last-of-type { border-bottom: none; }
+
+.slider-container {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+/* Sliders Estilo Linha de Comando */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    height: 4px;
+    border-radius: 2px;
+    outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--neon-cyan);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 6px var(--neon-cyan);
+    transition: transform 0.1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    margin-top: 15px;
+}
+
+.checkbox-container input {
+    accent-color: var(--neon-cyan);
+    cursor: pointer;
+}
+
+.alert-text {
+    font-size: 0.7rem;
+    color: var(--neon-orange);
+    font-style: italic;
+}
+
+.hidden { display: none; }
+
+.button-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Botões do Painel */
+.btn-hud {
+    background: rgba(0, 210, 255, 0.05);
+    border: 1px solid var(--hud-border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.7rem;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+.btn-hud:hover {
+    background: rgba(0, 210, 255, 0.15);
+    border-color: var(--neon-cyan);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.2);
+}
+
+.btn-danger {
+    width: 100%;
+    background: rgba(255, 77, 77, 0.05);
+    border-color: rgba(255, 77, 77, 0.3);
+}
+.btn-danger:hover {
+    background: rgba(255, 77, 77, 0.2);
+    border-color: var(--neon-red);
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.3);
+}
+
+.toggle-btn.active {
+    background: rgba(255, 159, 67, 0.2);
+    border-color: var(--neon-orange);
+    color: var(--neon-orange);
+    text-shadow: 0 0 5px rgba(255, 159, 67, 0.5);
+}
