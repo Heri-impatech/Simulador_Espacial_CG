@@ -186,97 +186,39 @@ window.addEventListener('load', () => {
         });
     }
 
-    // BUG FIX: Velocidades podem ser maiores (range até ±10)
-    if (slideBodyVx) {
-        slideBodyVx.addEventListener('input', (e) => {
-            if (!slideBodyVx) return;
-            slideBodyVx.min = "-10";
-            slideBodyVx.max = "10";
-            
+    // ========== CONTROLES DE VELOCIDADE ==========
+    function setupVelocityControl(slideElement, valElement, velocityIndex) {
+        if (!slideElement) return;
+        
+        // Definir range dinamicamente
+        slideElement.min = "-5";
+        slideElement.max = "5";
+        slideElement.step = "0.1";
+        
+        slideElement.addEventListener('input', (e) => {
             if (!selectedBody) return;
-            const vx = parseFloat(e.target.value) || 0;
-            if (!selectedBody.vel) selectedBody.vel = [0, 0, 0];
-            selectedBody.vel[0] = vx;
-            if (valBodyVx) valBodyVx.textContent = vx.toFixed(2);
+            if (!selectedBody.vel) selectedBody.vel = window.vec3.create();
             
-            const hasVelocity = Math.abs(selectedBody.vel[0]) > 0.01 || 
-                               Math.abs(selectedBody.vel[1] || 0) > 0.01 || 
-                               Math.abs(selectedBody.vel[2] || 0) > 0.01;
-            if (hasVelocity && !simulationActive) {
+            const newValue = parseFloat(e.target.value) || 0;
+            selectedBody.vel[velocityIndex] = newValue;
+            
+            // Atualizar display
+            if (valElement) valElement.textContent = newValue.toFixed(2);
+            
+            // Auto-ativar simulação se houver velocidade
+            const speed = window.vec3.length(selectedBody.vel);
+            if (speed > 0.05 && !simulationActive) {
                 simulationActive = true;
                 if (checkSimulation) checkSimulation.checked = true;
             }
         });
     }
 
-    if (slideBodyVy) {
-        slideBodyVy.addEventListener('input', (e) => {
-            if (!slideBodyVy) return;
-            slideBodyVy.min = "-10";
-            slideBodyVy.max = "10";
-            
-            if (!selectedBody) return;
-            const vy = parseFloat(e.target.value) || 0;
-            if (!selectedBody.vel) selectedBody.vel = [0, 0, 0];
-            selectedBody.vel[1] = vy;
-            if (valBodyVy) valBodyVy.textContent = vy.toFixed(2);
-            
-            const hasVelocity = Math.abs(selectedBody.vel[0] || 0) > 0.01 || 
-                               Math.abs(selectedBody.vel[1]) > 0.01 || 
-                               Math.abs(selectedBody.vel[2] || 0) > 0.01;
-            if (hasVelocity && !simulationActive) {
-                simulationActive = true;
-                if (checkSimulation) checkSimulation.checked = true;
-            }
-        });
-    }
+    setupVelocityControl(slideBodyVx, valBodyVx, 0);
+    setupVelocityControl(slideBodyVy, valBodyVy, 1);
+    setupVelocityControl(slideBodyVz, valBodyVz, 2);
 
-    if (slideBodyVz) {
-        slideBodyVz.addEventListener('input', (e) => {
-            if (!slideBodyVz) return;
-            slideBodyVz.min = "-10";
-            slideBodyVz.max = "10";
-            
-            if (!selectedBody) return;
-            const vz = parseFloat(e.target.value) || 0;
-            if (!selectedBody.vel) selectedBody.vel = [0, 0, 0];
-            selectedBody.vel[2] = vz;
-            if (valBodyVz) valBodyVz.textContent = vz.toFixed(2);
-            
-            const hasVelocity = Math.abs(selectedBody.vel[0] || 0) > 0.01 || 
-                               Math.abs(selectedBody.vel[1] || 0) > 0.01 || 
-                               Math.abs(selectedBody.vel[2]) > 0.01;
-            if (hasVelocity && !simulationActive) {
-                simulationActive = true;
-                if (checkSimulation) checkSimulation.checked = true;
-            }
-        });
-    }
-
-    if (btnInvertDir) {
-        btnInvertDir.addEventListener('click', () => {
-            if (!selectedBody || !selectedBody.vel) return;
-            window.vec3.scale(selectedBody.vel, selectedBody.vel, -1);
-            updateInspectorUI();
-        });
-    }
-
-    if (btnRepulsion) {
-        btnRepulsion.addEventListener('click', () => {
-            if (!selectedBody) return;
-            selectedBody.isRepelling = !selectedBody.isRepelling;
-            btnRepulsion.classList.toggle('active', selectedBody.isRepelling);
-        });
-    }
-
-    if (btnZeroVelocity) {
-        btnZeroVelocity.addEventListener('click', () => {
-            if (!selectedBody) return;
-            if (!selectedBody.vel) selectedBody.vel = [0, 0, 0];
-            window.vec3.set(selectedBody.vel, 0, 0, 0);
-            updateInspectorUI();
-        });
-    }
+    // ========== BOTÕES DE AÇÃO ==========
 
     if (btnResetScene) {
         btnResetScene.addEventListener('click', () => {
