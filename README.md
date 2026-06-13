@@ -1,8 +1,8 @@
 # Simulação de Campos Gravitacionais Coletivos e Colisões N-Corpos em Ambiente 3D Acelerada por Octrees
 
-**Autor:** Herivelton Guilherme Alves de Siqueira
-**Instituição:** IMPA Tech - Bacharelado em Matemática da Tecnologia e Inovação
-**Data:** Junho de 2026
+* **Autor:** Herivelton Guilherme Alves de Siqueira
+* **Instituição:** IMPA Tech - Bacharelado em Matemática da Tecnologia e Inovação
+* **Data:** Junho de 2026
 
 ---
 
@@ -30,9 +30,9 @@ Além da atração gravitacional tradicional, o sistema foi projetado para permi
 
 Uma implementação ingênua exige que cada corpo interaja com todos os demais, resultando em uma complexidade computacional de:
 
-[
+$$
 O(N^2)
-]
+$$
 
 Esse custo torna a execução em tempo real inviável para cenas com muitos objetos.
 
