@@ -1,1 +1,23 @@
-Projeto Simulador de colisões espaciais 
+##Simulação de Campos Gravitacionais Coletivos e
+## Colisões N-Corpos em Ambiente 3D Acelerada por
+Octrees
+Herivelton Guilherme Alves de Siqueira
+IMPA Tech - Bacharelado em Matemática da Tecnologia e Inovação
+28 de Maio de 2026
+1
+Proposta do Trabalho
+O objetivo deste projeto é o desenvolvimento de um motor de simulação física tridimen-
+sional interativo que modele a dinâmica de múltiplos corpos rígidos interagindo através
+de campos gravitacionais próprios e colisões elásticas. No sistema proposto, a geometria
+volumétrica (tamanho) de cada corpo rígido determinará diretamente a sua propriedade
+de massa. Corpos de grande magnitude atuarão como centros de atração (ou repul-
+são paramétrica), distorcendo as trajetórias cinemáticas dos corpos menores adjacentes
+baseando-se na discretização das leis de gravitação universal.
+Calcular as interações gravitacionais e os testes de impacto de forma direta resulta
+em uma complexidade algorítmica de O(N 2 ), inviabilizando a execução em tempo real no
+navegador. Para solucionar essa restrição computacional, o espaço euclidiano tridimen-
+sional da cena será gerenciado por uma Octree. Esta estrutura de dados particionará o
+domínio cúbico recursivamente em oito sub-octantes dinâmicos. A busca por vizinhança
+e a avaliação de forças de curto alcance serão restritas exclusivamente aos corpos que
+coabitam os mesmos nós-folha da árvore hierárquica, otimizando o processamento para
+O(N log N ).
