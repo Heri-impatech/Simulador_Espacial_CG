@@ -76,7 +76,7 @@ window.addEventListener('load', () => {
 
     // Corpos em posições ALEATÓRIAS, com velocidade inicial de interação
     function createRandomBody(x = null, y = null, z = null, mass = null, radius = null) {
-        const limit = 200; // Espaço para criação
+        const limit = 160; // Espaço seguro para criação dentro da Bounding Box da Octree
         const px = (x !== null) ? x : (Math.random() - 0.5) * limit * 2;
         const py = (y !== null) ? y : (Math.random() - 0.5) * limit * 2;
         const pz = (z !== null) ? z : (Math.random() - 0.5) * limit * 2;
@@ -90,10 +90,10 @@ window.addEventListener('load', () => {
         if (!body.vel) body.vel = window.vec3 ? window.vec3.create() : [0, 0, 0];
         if (!body.acc) body.acc = window.vec3 ? window.vec3.create() : [0, 0, 0];
         
-        // NOVO: Velocidade inicial aleatória para interação entre corpos
+        // Velocidade inicial aleatória balanceada para interações orbitais
         const angle1 = Math.random() * Math.PI * 2;
         const angle2 = Math.random() * Math.PI * 2;
-        const speed = 0.5 + Math.random() * 1.5; // Velocidade entre 0.5 e 2.0
+        const speed = 0.5 + Math.random() * 1.5; 
         
         const vx = speed * Math.cos(angle1) * Math.cos(angle2);
         const vy = speed * Math.sin(angle1) * Math.cos(angle2);
@@ -117,7 +117,6 @@ window.addEventListener('load', () => {
             bodies = [];
             nextBodyId = 0;
             
-            // Criar corpos com velocidades iniciais
             for (let i = 0; i < targetQty; i++) {
                 const body = createRandomBody();
                 bodies.push(body);
@@ -125,7 +124,6 @@ window.addEventListener('load', () => {
             
             clearSelection();
             
-            // AUTO-ATIVAR simulação se houver velocidades
             const hasVelocity = bodies.some(b => b.vel && window.vec3.length(b.vel) > 0.05);
             if (hasVelocity) {
                 simulationActive = true;
@@ -133,7 +131,6 @@ window.addEventListener('load', () => {
             }
             
             console.log(`✓ ${targetQty} corpos criados em posições aleatórias com velocidade inicial!`);
-            console.log(`✓ Clique em um corpo para selecionar e editar`);
         }
     }
 
@@ -151,44 +148,24 @@ window.addEventListener('load', () => {
         console.log('✗ Seleção limpada');
     }
 
-    // ========== INICIALIZAÇÃO ==========
-    console.log('═══════════════════════════════════════');
-    console.log('🚀 SIMULADOR ESPACIAL 3D - INICIANDO');
-    console.log('═══════════════════════════════════════');
-    console.log('✓ Canvas encontrado');
-    console.log('✓ Camera 3D inicializada');
-    console.log('✓ Octree preparada');
-    console.log('✓ Sistema de seleção ativo');
-    console.log('✓ Controles de edição preparados');
-    console.log('');
-    console.log('📖 INSTRUÇÕES:');
-    console.log('  1. Clique em um corpo para selecioná-lo');
-    console.log('  2. Use os sliders para alterar massa, tamanho e velocidade');
-    console.log('  3. Botões: Inverter direção | Alternar Repulsão | Parar');
-    console.log('═══════════════════════════════════════');
-    console.log('');
-
+    // ========== SINCRO DE TEXTO E VALORES DO INSPECTOR ==========
     function updateInspectorUI() {
         if (!selectedBody) {
             clearSelection();
             return;
         }
 
-        // Garantir que os elementos existem
         if (!inspectorControls || !noSelectionMsg) {
             console.error('Elementos do inspector não encontrados');
             return;
         }
 
-        // Mostrar controles, esconder mensagem
         inspectorControls.classList.remove('hidden');
         noSelectionMsg.classList.add('hidden');
 
-        // Garantir que vel e acc existem
         if (!selectedBody.vel) selectedBody.vel = window.vec3 ? window.vec3.create() : [0, 0, 0];
         if (!selectedBody.acc) selectedBody.acc = window.vec3 ? window.vec3.create() : [0, 0, 0];
 
-        // ========== ATUALIZAR CARD DO CORPO ==========
         if (selectedBodyId) {
             selectedBodyId.textContent = `CORPO #${selectedBody.id}`;
         }
@@ -202,32 +179,24 @@ window.addEventListener('load', () => {
             selectedBodySpeed.textContent = `${Math.max(0, speed).toFixed(2)} u/s`;
         }
         
-        if (selectedBodyPos) {
+        if (selectedBodyPos && selectedBody.pos) {
             const px = selectedBody.pos[0].toFixed(0);
             const py = selectedBody.pos[1].toFixed(0);
             const pz = selectedBody.pos[2].toFixed(0);
             selectedBodyPos.textContent = `X:${px} Y:${py} Z:${pz}`;
         }
 
-        // ========== ATUALIZAR SLIDERS DE MASSA ==========
+        // Sincronia de Massa
         const mass = Math.max(0.5, selectedBody.mass || 1.0);
-        if (slideBodyMass) {
-            slideBodyMass.value = mass;
-        }
-        if (valBodyMass) {
-            valBodyMass.textContent = mass.toFixed(2);
-        }
+        if (slideBodyMass) slideBodyMass.value = mass;
+        if (valBodyMass) valBodyMass.textContent = mass.toFixed(2);
 
-        // ========== ATUALIZAR SLIDERS DE TAMANHO ==========
+        // Sincronia de Raio/Tamanho
         const radius = Math.max(2, selectedBody.radius || 6);
-        if (slideBodySize) {
-            slideBodySize.value = radius;
-        }
-        if (valBodySize) {
-            valBodySize.textContent = radius.toFixed(1);
-        }
+        if (slideBodySize) slideBodySize.value = radius;
+        if (valBodySize) valBodySize.textContent = radius.toFixed(1);
 
-        // ========== ATUALIZAR SLIDERS DE VELOCIDADE ==========
+        // Sincronia dos Três Sliders de Velocidade Cartesianos
         const vx = parseFloat(selectedBody.vel[0]) || 0;
         const vy = parseFloat(selectedBody.vel[1]) || 0;
         const vz = parseFloat(selectedBody.vel[2]) || 0;
@@ -241,19 +210,16 @@ window.addEventListener('load', () => {
         if (slideBodyVz) slideBodyVz.value = vz;
         if (valBodyVz) valBodyVz.textContent = vz.toFixed(2);
 
-        // ========== ATUALIZAR BOTÃO DE REPULSÃO ==========
         if (btnRepulsion) {
-            const isRepelling = selectedBody.isRepelling || false;
-            if (isRepelling) {
+            if (selectedBody.isRepelling) {
                 btnRepulsion.classList.add('active');
             } else {
                 btnRepulsion.classList.remove('active');
             }
         }
-
-        console.log(`🔄 UI atualizado para Corpo #${selectedBody.id}`);
     }
 
+    // ========== LISTENERS DOS EVENTOS GLOBAIS DE CONFIGURAÇÃO ==========
     if (slideQty) {
         slideQty.addEventListener('input', syncPopulation);
     }
@@ -271,101 +237,70 @@ window.addEventListener('load', () => {
         });
     }
 
+    // ========== MODIFICAÇÃO DE PROPRIEDADES VIA SLIDERS COM ATUALIZAÇÃO RIGOROSA ==========
     if (slideBodyMass) {
         const updateMass = (e) => {
-            if (!selectedBody) {
-                console.warn('⚠️ Nenhum corpo selecionado para alterar massa');
-                return;
-            }
+            if (!selectedBody) return;
             const newMass = Math.max(0.5, parseFloat(e.target.value) || 1.0);
             selectedBody.mass = newMass;
             if (valBodyMass) valBodyMass.textContent = newMass.toFixed(2);
-            console.log(`✓ Massa do Corpo #${selectedBody.id} alterada para ${newMass.toFixed(2)} kg`);
         };
         slideBodyMass.addEventListener('input', updateMass, false);
-        slideBodyMass.addEventListener('change', updateMass, false);
     }
 
     if (slideBodySize) {
         const updateSize = (e) => {
-            if (!selectedBody) {
-                console.warn('⚠️ Nenhum corpo selecionado para alterar tamanho');
-                return;
-            }
+            if (!selectedBody) return;
             const newRadius = Math.max(2, parseFloat(e.target.value) || 6);
             selectedBody.radius = newRadius;
             if (valBodySize) valBodySize.textContent = newRadius.toFixed(1);
             
-            // Recalcular cor baseada no novo tamanho
-            if (selectedBody.generateCosmicColor && typeof selectedBody.generateCosmicColor === 'function') {
+            // Recalcula a assinatura cromática do corpo e a massa associada se houver a função volumétrica
+            if (selectedBody.generateCosmicColor) {
                 selectedBody.color = selectedBody.generateCosmicColor();
             }
-            console.log(`✓ Tamanho do Corpo #${selectedBody.id} alterado para ${newRadius.toFixed(1)} px`);
         };
         slideBodySize.addEventListener('input', updateSize, false);
-        slideBodySize.addEventListener('change', updateSize, false);
     }
 
-    // ========== CONTROLES DE VELOCIDADE COM RIGOR ==========
     function setupVelocityControl(slideElement, valElement, velocityIndex, axisName) {
-        if (!slideElement || !valElement) {
-            console.warn(`⚠️ Elemento do slider de velocidade ${axisName} não encontrado`);
-            return;
-        }
+        if (!slideElement || !valElement) return;
         
-        // Configurar atributos do slider
         slideElement.setAttribute('min', '-5');
         slideElement.setAttribute('max', '5');
         slideElement.setAttribute('step', '0.1');
-        slideElement.setAttribute('value', '0');
         
         const updateVelocity = (e) => {
-            if (!selectedBody) {
-                console.warn(`⚠️ Nenhum corpo selecionado para alterar velocidade (${axisName})`);
-                return;
-            }
+            if (!selectedBody) return;
             
-            // Garantir que vel existe
-            if (!selectedBody.vel || !Array.isArray(selectedBody.vel)) {
+            if (!selectedBody.vel) {
                 selectedBody.vel = window.vec3 ? window.vec3.create() : [0, 0, 0];
             }
             
             const newValue = parseFloat(e.target.value) || 0;
             selectedBody.vel[velocityIndex] = newValue;
-            
-            // Atualizar display
             valElement.textContent = newValue.toFixed(2);
             
-            // Calcular velocidade total
             const speed = window.vec3.length(selectedBody.vel);
-            console.log(`✓ Velocidade ${axisName} do Corpo #${selectedBody.id} = ${newValue.toFixed(2)} (total: ${speed.toFixed(2)} u/s)`);
+            if (selectedBodySpeed) selectedBodySpeed.textContent = `${speed.toFixed(2)} u/s`;
             
-            // Auto-ativar simulação se houver velocidade significativa
             if (speed > 0.05 && !simulationActive) {
                 simulationActive = true;
                 if (checkSimulation) checkSimulation.checked = true;
-                console.log('✓ Simulação ativada automaticamente');
             }
-            
-            // Atualizar UI inspector
-            updateInspectorUI();
         };
         
         slideElement.addEventListener('input', updateVelocity, false);
-        slideElement.addEventListener('change', updateVelocity, false);
     }
 
-    // Configurar controles de velocidade para os 3 eixos
-    setupVelocityControl(slideBodyVx, valBodyVx, 0, 'X (Esquerda-Direita)');
-    setupVelocityControl(slideBodyVy, valBodyVy, 1, 'Y (Cima-Baixo)');
-    setupVelocityControl(slideBodyVz, valBodyVz, 2, 'Z (Frente-Trás)');
+    setupVelocityControl(slideBodyVx, valBodyVx, 0, 'X');
+    setupVelocityControl(slideBodyVy, valBodyVy, 1, 'Y');
+    setupVelocityControl(slideBodyVz, valBodyVz, 2, 'Z');
 
-    // ========== BOTÕES DE AÇÃO COM RIGOR ==========
-
+    // ========== GERENCIAMENTO DE BOTÕES DE INTERAÇÃO DO HUD ==========
     if (btnResetScene) {
         btnResetScene.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             bodies = [];
             nextBodyId = 0;
             clearSelection();
@@ -374,82 +309,47 @@ window.addEventListener('load', () => {
             if (checkSimulation) checkSimulation.checked = false;
             if (slideG) slideG.value = 1.0;
             if (valG) valG.textContent = '1.0';
-            console.log('🔄 Cena reiniciada');
             syncPopulation();
         }, false);
     }
 
-    // Botão: Inverter Direção
     if (btnInvertDir) {
         btnInvertDir.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-            if (!selectedBody) {
-                console.warn('⚠️ Nenhum corpo selecionado para inverter');
-                return;
-            }
-            if (!selectedBody.vel) {
-                selectedBody.vel = window.vec3 ? window.vec3.create() : [0, 0, 0];
-            }
+            if (!selectedBody || !selectedBody.vel) return;
             window.vec3.negate(selectedBody.vel, selectedBody.vel);
             updateInspectorUI();
-            console.log(`✓ Velocidade invertida para Corpo #${selectedBody.id}`);
         }, false);
     }
 
-    // Botão: Alternar Repulsão
     if (btnRepulsion) {
         btnRepulsion.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-            if (!selectedBody) {
-                console.warn('⚠️ Nenhum corpo selecionado para alternar repulsão');
-                return;
-            }
+            if (!selectedBody) return;
             selectedBody.isRepelling = !selectedBody.isRepelling;
-            btnRepulsion.classList.toggle('active', selectedBody.isRepelling);
-            console.log(`✓ Corpo #${selectedBody.id} modo ${selectedBody.isRepelling ? '💥 REPULSÃO' : '🌍 ATRAÇÃO'}`);
             updateInspectorUI();
         }, false);
     }
 
-    // Botão: Parar Velocidade (Zerar)
     if (btnZeroVelocity) {
         btnZeroVelocity.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-            if (!selectedBody) {
-                console.warn('⚠️ Nenhum corpo selecionado para parar');
-                return;
-            }
-            if (!selectedBody.vel) {
-                selectedBody.vel = window.vec3 ? window.vec3.create() : [0, 0, 0];
-            }
+            if (!selectedBody || !selectedBody.vel) return;
             window.vec3.set(selectedBody.vel, 0, 0, 0);
             updateInspectorUI();
-            console.log(`✓ Velocidade zerada para Corpo #${selectedBody.id}`);
         }, false);
     }
 
-    // SISTEMA DE SELEÇÃO COM RIGOR - Detecta cliques nos corpos
+    // ========== INTERSEÇÃO E CLIQUE POR PROXIMIDADE (RAY CASTING 2D) ==========
     canvas.addEventListener('click', (e) => {
-        // Não processar se clicou na sidebar
         const hudPanel = document.getElementById('hud-panel');
-        if (hudPanel && e.target && hudPanel.contains(e.target)) {
-            return;
-        }
-
-        // Não processar durante rotação de câmera
-        if (camera && camera.isDragging) {
-            console.log('Camera em movimento - clique ignorado');
-            return;
-        }
+        if (hudPanel && e.target && hudPanel.contains(e.target)) return;
+        if (camera && camera.isDragging) return;
 
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        // Validação básica
         if (mouseX < 0 || mouseY < 0 || mouseX > rect.width || mouseY > rect.height) {
             clearSelection();
             return;
@@ -458,59 +358,34 @@ window.addEventListener('load', () => {
         let closestBody = null;
         let minDistance = Infinity;
 
-        console.log(`🔍 Procurando corpos... Total: ${bodies.length}`);
-
-        // RIGOR: Iterar sobre todos os corpos e encontrar o mais próximo
         for (let i = 0; i < bodies.length; i++) {
             const body = bodies[i];
+            if (!body || !body.pos) continue;
             
-            if (!body || !body.pos) {
-                console.warn(`Corpo ${i} inválido`);
-                continue;
-            }
-            
-            // Projetar posição 3D do corpo na tela
             const proj = camera.projectPoint(body.pos);
-            if (!proj) {
-                continue; // Corpo fora da câmera
-            }
+            if (!proj) continue; // Fora do Frustum de visão
             
-            // Calcular distância 2D do mouse até o corpo
             const dx = mouseX - proj.x;
             const dy = mouseY - proj.y;
             const dist2D = Math.sqrt(dx * dx + dy * dy);
             
-            // Calcular raio visual do corpo
             const visualRadius = Math.max(2, (body.radius || 6) * (550 / (550 + (proj.depth || 0))));
+            const clickZone = visualRadius + 18; // Tolerância expandida para usabilidade móvel/mouse
             
-            // Zona de clique expandida para usabilidade
-            const clickZone = visualRadius + 18;
-            
-            console.log(`  Corpo #${body.id}: dist=${dist2D.toFixed(1)}, radius=${visualRadius.toFixed(1)}, zone=${clickZone.toFixed(1)}`);
-            
-            // Se dentro da zona e é o mais próximo
             if (dist2D <= clickZone && dist2D < minDistance) {
                 minDistance = dist2D;
                 closestBody = body;
-                console.log(`    ✓ Candidato válido!`);
             }
         }
 
-        // Selecionar ou desselecionar
         if (closestBody) {
             selectedBody = closestBody;
-            console.log(`\n✅ CORPO #${closestBody.id} SELECIONADO`);
-            console.log(`   Massa: ${closestBody.mass.toFixed(2)} kg`);
-            console.log(`   Raio: ${closestBody.radius.toFixed(1)} px`);
-            console.log(`   Velocidade: ${window.vec3.length(closestBody.vel).toFixed(2)} u/s\n`);
             updateInspectorUI();
         } else {
             clearSelection();
-            console.log('❌ Nenhum corpo na zona de clique');
         }
     }, false);
 
-    // Efeito visual de cursor ao passar sobre corpos
     canvas.addEventListener('mousemove', (e) => {
         if (camera && camera.isDragging) {
             canvas.style.cursor = 'grabbing';
@@ -532,24 +407,24 @@ window.addEventListener('load', () => {
             const dy = mouseY - proj.y;
             const dist2D = Math.sqrt(dx * dx + dy * dy);
             const visualRadius = Math.max(2, (body.radius || 6) * (550 / (550 + (proj.depth || 0))));
-            const clickZone = visualRadius + 18;
             
-            if (dist2D <= clickZone) {
+            if (dist2D <= (visualRadius + 18)) {
                 isOverBody = true;
                 break;
             }
         }
-
-        canvas.style.cursor = isOverBody ? 'pointer' : (camera && camera.isDragging ? 'grabbing' : 'default');
+        canvas.style.cursor = isOverBody ? 'pointer' : 'default';
     }, false);
 
+    // ========== LOOP DE RENDEREZAÇÃO CONTÍNUO (60 FPS) ==========
     let lastTime = null;
     function run(nowMs) {
         if (lastTime === null) lastTime = nowMs;
         const dt = Math.min(0.016, (nowMs - lastTime) / 1000);
         lastTime = nowMs;
 
-        ctx.fillStyle = "rgba(3,3,5,0.15)";
+        // Limpeza com fator alpha constante para simular rastro cósmico de poeira (Motion Blur)
+        ctx.fillStyle = "rgba(3, 3, 5, 0.15)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         if (camera && typeof camera.updateMatrices === 'function') {
@@ -576,9 +451,10 @@ window.addEventListener('load', () => {
                 window.integrateBodies(bodies, dt, 500, spatialOctree.boundarySize);
             }
         } catch (err) {
-            console.error('Erro na física:', err);
+            console.error('Erro na computação física:', err);
         }
 
+        // Resolução mútua e par a par de colisões elásticas
         for (let i = 0; i < bodies.length; i++) {
             for (let j = i + 1; j < bodies.length; j++) {
                 if (bodies[i] && bodies[i].checkCollision) {
@@ -587,6 +463,7 @@ window.addEventListener('load', () => {
             }
         }
 
+        // Ordenação reversa do Z-Buffer (Algoritmo do Pintor) para evitar quebras de oclusão
         const renderedQueue = bodies
             .filter(body => body && body.pos)
             .map(body => {
@@ -599,13 +476,12 @@ window.addEventListener('load', () => {
 
         renderedQueue.sort((a, b) => b.proj.depth - a.proj.depth);
 
-        // Atualizar inspector em tempo real se houver corpo selecionado
+        // Atualização em tempo real das coordenadas dinâmicas do card selecionado
         if (selectedBody && inspectorControls && !inspectorControls.classList.contains('hidden')) {
-            // Atualizar informações que mudam constantemente
             const speed = Math.max(0, selectedBody.getSpeed ? selectedBody.getSpeed() : window.vec3.length(selectedBody.vel));
             if (selectedBodySpeed) selectedBodySpeed.textContent = `${speed.toFixed(2)} u/s`;
             
-            if (selectedBodyPos) {
+            if (selectedBodyPos && selectedBody.pos) {
                 const px = selectedBody.pos[0].toFixed(0);
                 const py = selectedBody.pos[1].toFixed(0);
                 const pz = selectedBody.pos[2].toFixed(0);
@@ -629,22 +505,4 @@ window.addEventListener('load', () => {
 
     syncPopulation();
     requestAnimationFrame(run);
-    
-    console.log('═══════════════════════════════════════');
-    console.log('✅ SIMULADOR INICIALIZADO COM SUCESSO!');
-    console.log('═══════════════════════════════════════');
-    console.log('');
-    console.log('🎮 COMO USAR:');
-    console.log('  • CLIQUE EM UM CORPO para selecioná-lo');
-    console.log('  • ARRASTE COM O MOUSE para rotar câmera');
-    console.log('  • RODA DO MOUSE para zoom in/out');
-    console.log('');
-    console.log('⚙️ CONTROLES DO CORPO SELECIONADO:');
-    console.log('  • Slider MASSA: De 0.5 a 10 kg');
-    console.log('  • Slider TAMANHO: De 2 a 30 px');
-    console.log('  • Slider VELOCIDADE X/Y/Z: De -5 a +5 u/s');
-    console.log('  • Botão INVERTER: Inverte direção');
-    console.log('  • Botão REPULSÃO: Alterna atração/repulsão');
-    console.log('  • Botão PARAR: Zera a velocidade');
-    console.log('═══════════════════════════════════════');
 });
