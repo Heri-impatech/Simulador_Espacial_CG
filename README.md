@@ -1,8 +1,8 @@
 # Simulação de Campos Gravitacionais Coletivos e Colisões N-Corpos em Ambiente 3D Acelerada por Octrees
 
 **Autor:** Herivelton Guilherme Alves de Siqueira
-**Instituição:** IMPA Tech – Bacharelado em Matemática da Tecnologia e Inovação
-**Data:** 28 de maio de 2026
+**Instituição:** IMPA Tech - Bacharelado em Matemática da Tecnologia e Inovação
+**Data:** Junho de 2026
 
 ---
 
@@ -51,9 +51,9 @@ Essa abordagem permite:
 
 Com essa estratégia, a complexidade média da simulação pode ser reduzida para aproximadamente:
 
-[
+$$
 O(N \log N)
-]
+$$
 
 tornando viável a execução em tempo real diretamente no navegador.
 
