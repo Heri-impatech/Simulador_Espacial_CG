@@ -10,7 +10,7 @@
     <div class="container">
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h1>⭐ COSMOS 3D</h1>
+                <h1> COSMOS 3D</h1>
                 <p class="subtitle">Simulador Gravitacional</p>
             </div>
 
@@ -57,6 +57,24 @@
                     <p id="no-selection-msg" class="alert-text">Clique em um corpo para modificar</p>
                     
                     <div id="inspector-controls" class="hidden">
+                        <!-- Card de corpo selecionado -->
+                        <div class="selected-body-card">
+                            <div class="body-header">
+                                <span class="body-id" id="selected-body-id">CORPO #0</span>
+                                <span class="body-mode" id="selected-body-mode">🌍 ATRAÇÃO</span>
+                            </div>
+                            <div class="body-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Velocidade</span>
+                                    <span class="stat-value" id="selected-body-speed">0.00 u/s</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Posição</span>
+                                    <span class="stat-value" id="selected-body-pos">X:0 Y:0 Z:0</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="slider-container">
                             <label for="slide-body-mass">
                                 <span class="label-name">Massa</span>

@@ -346,6 +346,84 @@ input[type="range"]::-moz-range-thumb:hover {
     margin: 10px 0;
 }
 
+/* ============= SELECTED BODY CARD ============= */
+.selected-body-card {
+    background: linear-gradient(135deg, 
+        rgba(0, 210, 255, 0.08) 0%, 
+        rgba(139, 92, 246, 0.06) 100%);
+    border: 1.5px solid rgba(0, 210, 255, 0.35);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15),
+                inset 0 0 15px rgba(0, 210, 255, 0.05);
+    animation: bodyCardPulse 2s ease-in-out infinite;
+}
+
+@keyframes bodyCardPulse {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15),
+                    inset 0 0 15px rgba(0, 210, 255, 0.05);
+    }
+    50% {
+        box-shadow: 0 6px 20px rgba(0, 210, 255, 0.25),
+                    inset 0 0 20px rgba(0, 210, 255, 0.1);
+    }
+}
+
+.body-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 210, 255, 0.15);
+}
+
+.body-id {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.body-mode {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--neon-green);
+    padding: 4px 8px;
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    border-radius: 4px;
+}
+
+.body-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 0.8rem;
+    color: var(--neon-cyan);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
 .hidden {
     display: none;
 }

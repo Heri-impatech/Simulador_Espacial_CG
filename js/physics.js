@@ -80,13 +80,39 @@ class CelestialBody {
     }
 
     generateCosmicColor() {
+        // Paleta de cores realista para corpos celestes
+        const colorPalette = [
+            // Gigantes gasosos
+            { r: 255, g: 140, b: 0, type: 'gas-giant' },      // Laranja (Júpiter)
+            { r: 220, g: 180, b: 100, type: 'gas-giant' },    // Bege (Saturno)
+            // Planetas terrestres
+            { r: 139, g: 69, b: 19, type: 'terrestrial' },    // Marrom (Marte)
+            { r: 70, g: 130, b: 180, type: 'terrestrial' },   // Azul (Terra)
+            // Estrelas
+            { r: 255, g: 255, b: 200, type: 'star' },         // Amarelo (Anã Amarela)
+            { r: 255, g: 150, b: 100, type: 'star' },         // Laranja (Anã Laranja)
+            { r: 255, g: 200, b: 220, type: 'star' },         // Rosa (Anã Vermelha)
+        ];
+        
+        // Selecionar cor baseada no raio
         if (this.radius > 18) {
-            return { r: 255, g: 200, b: 100 }; // Laranja/dourado para grandes
+            const choice = Math.floor(this.id % 3);
+            return colorPalette[choice]; // Gigantes
         }
-        if (this.radius > 10) {
-            return { r: 100, g: 150, b: 255 }; // Azul para médios
+        if (this.radius > 12) {
+            const choice = 3 + Math.floor(this.id % 1);
+            return colorPalette[choice]; // Terrestres
         }
-        return { r: 240, g: 240, b: 255 }; // Branco para pequenos
+        if (this.radius > 8) {
+            const choice = 4 + Math.floor(this.id % 3);
+            return colorPalette[choice]; // Estrelas pequenas
+        }
+        // Pequenos asteroides/cometas com cor aleatória
+        return {
+            r: 150 + Math.sin(this.id * 0.7) * 105,
+            g: 180 + Math.cos(this.id * 0.9) * 75,
+            b: 240 + Math.sin(this.id * 1.1) * 15
+        };
     }
 
     // Integração rigorosa (método de Euler semi-implícito)
@@ -162,55 +188,142 @@ class CelestialBody {
         if (!proj) return;
 
         const visualRadius = this.radius * (550 / (550 + proj.depth));
+        const effectiveRadius = Math.max(2, visualRadius);
         
-        // Desenhar corpo
-        const baseColor = `rgb(${this.color.r},${this.color.g},${this.color.b})`;
-        ctx.fillStyle = baseColor;
+        // ========== EFEITO 1: HALO CÓSMICO EXTERNO ==========
+        const haloRadius = effectiveRadius + 8;
+        const haloGradient = ctx.createRadialGradient(proj.x, proj.y, effectiveRadius, proj.x, proj.y, haloRadius);
+        const haloColor = `rgba(${this.color.r},${this.color.g},${this.color.b}`;
+        haloGradient.addColorStop(0, `${haloColor},0.15)`);
+        haloGradient.addColorStop(0.5, `${haloColor},0.05)`);
+        haloGradient.addColorStop(1, `${haloColor},0)`);
+        ctx.fillStyle = haloGradient;
         ctx.beginPath();
-        ctx.arc(proj.x, proj.y, Math.max(2, visualRadius), 0, Math.PI * 2);
+        ctx.arc(proj.x, proj.y, haloRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Glow effect
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = baseColor;
-        ctx.strokeStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},0.3)`;
-        ctx.lineWidth = 1;
+        // ========== EFEITO 2: CORPO COM GRADIENTE RADIAL ==========
+        const bodyGradient = ctx.createRadialGradient(
+            proj.x - effectiveRadius * 0.3, 
+            proj.y - effectiveRadius * 0.3, 
+            0, 
+            proj.x, 
+            proj.y, 
+            effectiveRadius
+        );
+        
+        // Criar cor mais brilhante para o gradiente
+        const brighterR = Math.min(255, this.color.r + 40);
+        const brighterG = Math.min(255, this.color.g + 40);
+        const brighterB = Math.min(255, this.color.b + 40);
+        
+        bodyGradient.addColorStop(0, `rgb(${brighterR},${brighterG},${brighterB})`);
+        bodyGradient.addColorStop(0.6, `rgb(${this.color.r},${this.color.g},${this.color.b})`);
+        bodyGradient.addColorStop(1, `rgb(${Math.max(0, this.color.r - 50)},${Math.max(0, this.color.g - 50)},${Math.max(0, this.color.b - 50)})`);
+        
+        ctx.fillStyle = bodyGradient;
         ctx.beginPath();
-        ctx.arc(proj.x, proj.y, Math.max(2, visualRadius) + 2, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
+        ctx.arc(proj.x, proj.y, effectiveRadius, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Desenhar borda e informações se selecionado
+        // ========== EFEITO 3: BRILHO INTERNO (GLOSS) ==========
+        const glossGradient = ctx.createRadialGradient(
+            proj.x - effectiveRadius * 0.4, 
+            proj.y - effectiveRadius * 0.4, 
+            0, 
+            proj.x, 
+            proj.y, 
+            effectiveRadius * 0.4
+        );
+        glossGradient.addColorStop(0, `rgba(255,255,255,0.4)`);
+        glossGradient.addColorStop(1, `rgba(255,255,255,0)`);
+        ctx.fillStyle = glossGradient;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, effectiveRadius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ========== EFEITO 4: BORDA LUMINOSA ==========
+        ctx.strokeStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},0.5)`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, effectiveRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // ========== SELEÇÃO: BORDA DESTACADA ==========
         if (isSelected) {
             const glowColor = this.isRepelling ? '#ff6b6b' : '#00ff88';
+            
+            // Múltiplas camadas de glow para efeito holográfico
+            for (let i = 3; i >= 1; i--) {
+                ctx.strokeStyle = this.isRepelling ? 
+                    `rgba(255, 107, 107, ${0.3 / i})` : 
+                    `rgba(0, 255, 136, ${0.3 / i})`;
+                ctx.lineWidth = 2 * i;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, effectiveRadius + 4 + (i * 2), 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Borda principal selecionada
             ctx.strokeStyle = glowColor;
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
-            ctx.arc(proj.x, proj.y, Math.max(2, visualRadius) + 6, 0, Math.PI * 2);
+            ctx.arc(proj.x, proj.y, effectiveRadius + 5, 0, Math.PI * 2);
             ctx.stroke();
             
             // Informações detalhadas
             const speed = this.getSpeed();
+            const posX = proj.x + effectiveRadius + 15;
+            const posY = proj.y;
+            
             ctx.fillStyle = glowColor;
-            ctx.font = '12px monospace';
-            ctx.fillText(`ID:${this.id} M:${this.mass.toFixed(1)} V:${speed.toFixed(2)}`, proj.x + visualRadius + 10, proj.y - 15);
-            ctx.fillText(`R:${this.radius.toFixed(1)} ${this.isRepelling ? '(REPULSÃO)' : '(ATRAÇÃO)'}`, proj.x + visualRadius + 10, proj.y);
+            ctx.font = 'bold 13px monospace';
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = 8;
+            
+            ctx.fillText(`● CORPO #${this.id}`, posX, posY - 20);
+            
+            ctx.font = '11px monospace';
+            ctx.fillText(`Massa: ${this.mass.toFixed(2)} kg`, posX, posY - 5);
+            ctx.fillText(`Raio: ${this.radius.toFixed(1)} px`, posX, posY + 8);
+            ctx.fillText(`Vel: ${speed.toFixed(2)} u/s`, posX, posY + 21);
+            ctx.fillText(`Modo: ${this.isRepelling ? '💥 REPULSÃO' : '🌍 ATRAÇÃO'}`, posX, posY + 34);
+            
+            ctx.shadowBlur = 0;
         }
 
-        // Desenhar trilha de velocidade
+        // ========== TRILHA DE VELOCIDADE MELHORADA ==========
         if (this.vel && window.vec3.length(this.vel) > 0.1) {
             const nextPos = window.vec3.create();
             window.vec3.scaleAndAdd(nextPos, this.pos, this.vel, 10);
             const nextProj = camera.projectPoint(nextPos);
             
             if (nextProj) {
-                const trailColor = this.isRepelling ? 'rgba(255,100,100,0.4)' : 'rgba(100,200,255,0.4)';
+                const speed = this.getSpeed();
+                const opacity = Math.min(0.8, speed * 0.1);
+                const trailColor = this.isRepelling ? 
+                    `rgba(255,100,100,${opacity})` : 
+                    `rgba(100,200,255,${opacity})`;
+                
                 ctx.strokeStyle = trailColor;
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
                 ctx.beginPath();
                 ctx.moveTo(proj.x, proj.y);
                 ctx.lineTo(nextProj.x, nextProj.y);
                 ctx.stroke();
+                
+                // Ponta da seta
+                const angle = Math.atan2(nextProj.y - proj.y, nextProj.x - proj.x);
+                const arrowSize = 4;
+                ctx.fillStyle = trailColor;
+                ctx.beginPath();
+                ctx.moveTo(nextProj.x, nextProj.y);
+                ctx.lineTo(nextProj.x - arrowSize * Math.cos(angle - Math.PI / 6), nextProj.y - arrowSize * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(nextProj.x - arrowSize * Math.cos(angle + Math.PI / 6), nextProj.y - arrowSize * Math.sin(angle + Math.PI / 6));
+                ctx.closePath();
+                ctx.fill();
             }
         }
     }

@@ -209,8 +209,30 @@ class OctreeNode {
         const projVertices = rawVertices.map(v => camera.projectPoint(v)).filter(p => p !== null);
         if (projVertices.length === 0) return;
 
-        ctx.strokeStyle = '#00ffff';
-        ctx.lineWidth = 0.5;
+        // Cor gradiente para octrees
+        const depth = this.depth || 0;
+        const maxDepth = this.maxDepth || 5;
+        const depthRatio = depth / maxDepth;
+        
+        // Gradiente de cores: Ciano -> Roxo -> Magenta
+        let r, g, b;
+        if (depthRatio < 0.5) {
+            // Ciano -> Roxo
+            const t = depthRatio * 2;
+            r = Math.floor(0 + (139 - 0) * t);
+            g = Math.floor(210 + (92 - 210) * t);
+            b = Math.floor(255 + (246 - 255) * t);
+        } else {
+            // Roxo -> Magenta/Azul
+            const t = (depthRatio - 0.5) * 2;
+            r = Math.floor(139 + (200 - 139) * t);
+            g = Math.floor(92 + (100 - 92) * t);
+            b = Math.floor(246 + (255 - 246) * t);
+        }
+        
+        const opacity = 0.3 + (0.4 * (1 - depthRatio)); // Mais opaco para níveis superiores
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        ctx.lineWidth = Math.max(0.5, 1.5 - (depthRatio * 0.8));
 
         const edges = [
             [0, 1], [1, 2], [2, 3], [3, 0],
