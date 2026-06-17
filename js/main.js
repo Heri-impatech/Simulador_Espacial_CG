@@ -1,6 +1,6 @@
 /**
  * js/main.js
- * Orquestração N-Corpos Aleatória com Seleção de Escala Normalizada
+ * Orquestrador Estocástico N-Body com Liberação Dinâmica de UI
  */
 
 window.addEventListener('load', () => {
@@ -12,7 +12,7 @@ window.addEventListener('load', () => {
     resizeCanvas();
 
     const camera = new window.Camera3D(canvas);
-    const spatialOctree = new window.Octree(600, 5);
+    const spatialOctree = new window.Octree(1200, 5); // Universo expandido
 
     let bodies = [];
     let selectedBody = null;
@@ -20,9 +20,7 @@ window.addEventListener('load', () => {
 
     // Referências DOM
     const slideQty = document.getElementById('slide-qty');
-    const valQty = document.getElementById('val-qty');
     const slideG = document.getElementById('slide-g');
-    const valG = document.getElementById('val-g');
     const checkOctree = document.getElementById('check-octree');
 
     const inspectorControls = document.getElementById('inspector-controls');
@@ -30,27 +28,29 @@ window.addEventListener('load', () => {
     const valBodyMass = document.getElementById('val-body-mass');
     const slideBodySize = document.getElementById('slide-body-size');
     const valBodySize = document.getElementById('val-body-size');
-    const slideBodySpeed = document.getElementById('slide-body-vx'); // Slider Mestre de Velocidade
+    const slideBodySpeed = document.getElementById('slide-body-vx'); 
     const valBodySpeed = document.getElementById('val-body-vx');
-    
     const btnRepulsion = document.getElementById('btn-repulsion');
-    const btnInvertDir = document.getElementById('btn-invert-dir');
 
-    // 1. Gera Aglomerado Estelar Randômico (Substitui o Sistema Solar Estático)
+    // ==============================================================
+    // RIGOR DE ENGENHARIA: Quebrando os limites antigos do HTML
+    // ==============================================================
+    if (slideBodySize) { slideBodySize.min = 2; slideBodySize.max = 150; slideBodySize.step = 1; }
+    if (slideBodyMass) { slideBodyMass.min = 0.1; slideBodyMass.max = 10000; slideBodyMass.step = 0.1; }
+    if (slideBodySpeed) { slideBodySpeed.min = 0; slideBodySpeed.max = 5; slideBodySpeed.step = 0.1; }
+
+    // Criação inicial com 7 Corpos Aleatórios
     function spawnRandomCluster(count) {
         bodies = [];
         for (let i = 0; i < count; i++) {
-            // Posição no núcleo do espaço
-            const px = (Math.random() - 0.5) * 300;
-            const py = (Math.random() - 0.5) * 300;
-            const pz = (Math.random() - 0.5) * 300;
+            const px = (Math.random() - 0.5) * 600;
+            const py = (Math.random() - 0.5) * 600;
+            const pz = (Math.random() - 0.5) * 600;
 
-            // Raio entre 15 e 35 para garantir visibilidade alta
-            const radius = 15 + Math.random() * 20;
+            const radius = 10 + Math.random() * 30;
             const body = new window.CelestialBody(px, py, pz, radius, i);
 
-            // Velocidades energéticas iniciais usando distribuição esférica
-            const speed = 2.0 + Math.random() * 3.5; 
+            const speed = 2.0 + Math.random() * 4.0; 
             const angleTheta = Math.random() * Math.PI * 2;
             const anglePhi = Math.acos((Math.random() * 2) - 1);
 
@@ -63,36 +63,30 @@ window.addEventListener('load', () => {
         }
     }
 
-    function syncPopulation() {
-        const targetQty = parseInt(slideQty.value) || 7;
-        if (valQty) valQty.textContent = targetQty;
-
-        if (bodies.length !== targetQty) {
-            clearSelection();
-            spawnRandomCluster(targetQty);
-        }
-    }
-
     function clearSelection() {
         selectedBody = null;
         if (inspectorControls) inspectorControls.classList.add('hidden');
     }
 
-    // Oculta unidades explícitas e atualiza dados
+    // Atualização Abstrata de UI (Sem unidades, totalmente desacoplado)
     function updateInspectorUI() {
         if (!selectedBody) return;
-        if (inspectorControls) inspectorControls.classList.remove('hidden');
+        inspectorControls.classList.remove('hidden');
 
-        const mass = Math.max(0.5, selectedBody.mass);
-        if (slideBodyMass) slideBodyMass.value = mass;
-        if (valBodyMass) valBodyMass.textContent = mass.toFixed(0); 
+        if (slideBodyMass) {
+            slideBodyMass.value = selectedBody.mass;
+            valBodyMass.textContent = selectedBody.mass.toFixed(1); 
+        }
 
-        const radius = Math.max(2, selectedBody.radius);
-        if (slideBodySize) slideBodySize.value = radius;
-        if (valBodySize) valBodySize.textContent = radius.toFixed(1);
+        if (slideBodySize) {
+            slideBodySize.value = selectedBody.radius;
+            valBodySize.textContent = selectedBody.radius.toFixed(1);
+        }
 
-        if (slideBodySpeed) slideBodySpeed.value = selectedBody.speedMultiplier;
-        if (valBodySpeed) valBodySpeed.textContent = selectedBody.speedMultiplier.toFixed(2);
+        if (slideBodySpeed) {
+            slideBodySpeed.value = selectedBody.speedMultiplier;
+            valBodySpeed.textContent = selectedBody.speedMultiplier.toFixed(2);
+        }
         
         if (btnRepulsion) {
             if (selectedBody.isRepelling) btnRepulsion.classList.add('active');
@@ -100,25 +94,26 @@ window.addEventListener('load', () => {
         }
     }
 
-    // Listeners do Menu Global
-    if (slideQty) slideQty.addEventListener('input', syncPopulation);
-    if (slideG) slideG.addEventListener('input', (e) => {
-        currentG = parseFloat(e.target.value);
-        if (valG) valG.textContent = currentG.toFixed(1);
+    // Listeners Globais
+    if (slideQty) slideQty.addEventListener('input', (e) => {
+        clearSelection();
+        spawnRandomCluster(parseInt(e.target.value));
     });
 
-    // Listeners do Menu Individual
-    if (slideBodyMass) slideBodyMass.addEventListener('input', (e) => {
-        if (selectedBody) selectedBody.mass = parseFloat(e.target.value);
-        updateInspectorUI();
-    });
+    if (slideG) slideG.addEventListener('input', (e) => currentG = parseFloat(e.target.value));
 
+    // Desacoplamento Total de UI
     if (slideBodySize) slideBodySize.addEventListener('input', (e) => {
         if (selectedBody) {
             selectedBody.radius = parseFloat(e.target.value);
-            selectedBody.mass = Math.pow(selectedBody.radius, 3) * 0.002; 
+            // Re-renderiza a cor sem alterar a massa (massa e tamanho agora são independentes)
             selectedBody.color = selectedBody.generateCosmicColor();
         }
+        updateInspectorUI();
+    });
+
+    if (slideBodyMass) slideBodyMass.addEventListener('input', (e) => {
+        if (selectedBody) selectedBody.mass = parseFloat(e.target.value);
         updateInspectorUI();
     });
 
@@ -126,27 +121,20 @@ window.addEventListener('load', () => {
         if (selectedBody) selectedBody.speedMultiplier = parseFloat(e.target.value);
         updateInspectorUI();
     });
-    
-    if (btnRepulsion) btnRepulsion.addEventListener('click', () => {
+
+    if (btnRepulsion) btnRepulsion.addEventListener('click', (e) => {
+        e.preventDefault();
         if (selectedBody) {
             selectedBody.isRepelling = !selectedBody.isRepelling;
             updateInspectorUI();
         }
     });
-    
-    if (btnInvertDir) btnInvertDir.addEventListener('click', () => {
-        if (selectedBody) {
-            window.vec3.negate(selectedBody.vel, selectedBody.vel);
-        }
-    });
 
-    // 2. RAY CASTING DE SELEÇÃO CALIBRADO COM NORMALIZAÇÃO DE RESOLUÇÃO
+    // Raycasting Normalizado
     canvas.addEventListener('click', (e) => {
         if (camera.isDragging) return;
         
         const rect = canvas.getBoundingClientRect();
-        
-        // Fator de correção de tela (essencial para o clique funcionar)
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         
@@ -163,9 +151,7 @@ window.addEventListener('load', () => {
             const dist2D = Math.sqrt(Math.pow(mouseX - proj.x, 2) + Math.pow(mouseY - proj.y, 2));
             const visualRadius = Math.max(5, body.radius * (550 / (550 + proj.depth)));
             
-            // Hitbox expandida para corpos em movimento rápido
             const hitZone = (visualRadius * 1.5) + 30; 
-            
             if (dist2D <= hitZone && dist2D < minDistance) {
                 minDistance = dist2D;
                 closestBody = body;
@@ -173,33 +159,30 @@ window.addEventListener('load', () => {
         }
         
         selectedBody = closestBody;
-        if (selectedBody) {
-            updateInspectorUI();
-        } else {
-            clearSelection();
-        }
+        if (selectedBody) updateInspectorUI();
+        else clearSelection();
     });
 
-    // 3. LOOP DE ANIMAÇÃO
+    // LOOP PRINCIPAL (60 FPS)
     let lastTime = null;
     function run(nowMs) {
         if (lastTime === null) lastTime = nowMs;
         const dt = Math.min(0.016, (nowMs - lastTime) / 1000);
         lastTime = nowMs;
 
-        // Limpeza com rastro
-        ctx.fillStyle = "rgba(3, 3, 5, 0.25)";
+        ctx.fillStyle = "rgba(5, 5, 8, 0.4)"; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         camera.updateMatrices();
 
+        // A malha agora é reconstruída e lida ativamente pela Física
         spatialOctree.rebuild(bodies);
-        window.computeGravitationalForces(bodies, currentG, 1.0);
+        
+        // A gravidade agora é brutal e real
+        window.computeGravitationalForces(bodies, currentG);
 
         for (let i = 0; i < bodies.length; i++) {
-            for (let j = i + 1; j < bodies.length; j++) {
-                bodies[i].checkCollision(bodies[j]);
-            }
+            for (let j = i + 1; j < bodies.length; j++) bodies[i].checkCollision(bodies[j]);
         }
 
         for (let body of bodies) body.integrate(dt, spatialOctree.boundarySize);
@@ -208,7 +191,6 @@ window.addEventListener('load', () => {
         renderedQueue.sort((a, b) => b.proj.depth - a.proj.depth);
 
         if (checkOctree && checkOctree.checked) spatialOctree.draw(ctx, camera);
-
         for (let item of renderedQueue) {
             item.instance.draw(ctx, camera, selectedBody && item.instance.id === selectedBody.id);
         }
@@ -216,8 +198,7 @@ window.addEventListener('load', () => {
         requestAnimationFrame(run);
     }
 
-    // START
     if (slideQty) slideQty.value = 7;
-    syncPopulation();
+    spawnRandomCluster(7);
     requestAnimationFrame(run);
 });
