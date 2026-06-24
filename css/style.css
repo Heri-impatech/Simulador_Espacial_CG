@@ -1,14 +1,21 @@
-/* style.css - Layout com Sidebar */
+/* 
+ * style.css
+ * Layout principal com Sidebar + Canvas 3D
+ * Tema: Sci-Fi espacial com glassmorphism e neon ciano
+ */
 
+/* ============= VARIÁVEIS DE DESIGN ============= */
 :root {
-    --space-black: #0a0e1a;
-    --sidebar-bg: linear-gradient(180deg, rgba(15, 20, 35, 0.95) 0%, rgba(10, 12, 25, 0.95) 100%);
+    --space-black: #050508;
+    --space-deep: #0a0e1a;
+    --sidebar-bg: linear-gradient(180deg, rgba(12, 16, 30, 0.97) 0%, rgba(8, 10, 20, 0.97) 100%);
     --sidebar-border: rgba(0, 210, 255, 0.15);
     --neon-cyan: #00d2ff;
     --neon-purple: #8b5cf6;
     --neon-orange: #ff9f43;
     --neon-red: #ff4d4d;
     --neon-green: #2ecc71;
+    --neon-yellow: #ffdd57;
     --text-primary: #e8f0ff;
     --text-secondary: #a8bfff;
     --text-muted: #5a6b8f;
@@ -16,6 +23,7 @@
     --element-border: rgba(0, 210, 255, 0.2);
 }
 
+/* ============= RESET ============= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -32,7 +40,7 @@ html, body {
 body {
     background-color: var(--space-black);
     color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Courier New', monospace;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     display: flex;
 }
 
@@ -44,75 +52,82 @@ body {
 
 /* ============= SIDEBAR ============= */
 .sidebar {
-    width: 380px;
+    width: 360px;
+    min-width: 360px;
     height: 100%;
     background: var(--sidebar-bg);
     border-right: 1px solid var(--sidebar-border);
-    box-shadow: 2px 0 15px rgba(0, 210, 255, 0.08);
+    box-shadow: 2px 0 20px rgba(0, 210, 255, 0.06);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 10;
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
-/* Scrollbar customizada */
+/* Scrollbar customizada (WebKit) */
 .sidebar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 .sidebar::-webkit-scrollbar-track {
     background: transparent;
 }
 .sidebar::-webkit-scrollbar-thumb {
-    background: rgba(0, 210, 255, 0.3);
+    background: rgba(0, 210, 255, 0.2);
     border-radius: 3px;
 }
 .sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 210, 255, 0.5);
+    background: rgba(0, 210, 255, 0.4);
 }
 
+/* ── Header da Sidebar ── */
 .sidebar-header {
-    padding: 25px 20px;
+    padding: 22px 20px;
     border-bottom: 1px solid var(--element-border);
-    background: linear-gradient(135deg, rgba(0, 210, 255, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(0, 210, 255, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+    flex-shrink: 0;
 }
 
 .sidebar-header h1 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--neon-cyan);
     letter-spacing: 2px;
-    margin-bottom: 5px;
-    text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+    margin-bottom: 4px;
+    text-shadow: 0 0 12px rgba(0, 210, 255, 0.3);
 }
 
 .sidebar-header .subtitle {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
 }
 
+/* ── HUD Panel (conteúdo rolável) ── */
 .hud-panel {
     flex: 1;
     overflow-y: auto;
     padding: 0;
 }
 
-/* ============= HUD PANEL ============= */
-
+/* ============= STATUS DO SISTEMA ============= */
 .system-status {
-    padding: 15px 20px;
+    padding: 12px 20px;
     border-bottom: 1px dashed var(--element-border);
+    flex-shrink: 0;
 }
 
 .status-indicator {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
 }
 
 .pulse-dot {
@@ -122,6 +137,7 @@ body {
     border-radius: 50%;
     box-shadow: 0 0 10px var(--neon-green);
     animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
 @keyframes pulse {
@@ -135,11 +151,11 @@ body {
     }
 }
 
-/* ============= CONTROL GROUPS ============= */
+/* ============= GRUPOS DE CONTROLE ============= */
 .control-group {
-    padding: 20px;
-    border-bottom: 1px solid rgba(0, 210, 255, 0.08);
-    transition: all 0.3s ease;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(0, 210, 255, 0.06);
+    transition: background 0.3s ease;
 }
 
 .control-group:last-of-type {
@@ -147,96 +163,125 @@ body {
 }
 
 .control-group h3 {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: var(--neon-cyan);
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid rgba(0, 210, 255, 0.15);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 210, 255, 0.12);
     font-weight: 600;
 }
 
 /* ============= SLIDERS ============= */
 .slider-container {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
+}
+
+.slider-container:last-child {
+    margin-bottom: 0;
 }
 
 .slider-container label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     cursor: pointer;
 }
 
 .label-name {
     font-weight: 500;
     flex: 1;
+    line-height: 1.3;
+}
+
+.axis-hint {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 400;
 }
 
 .label-value {
-    font-family: 'Monaco', 'Courier New', monospace;
+    font-family: 'Courier New', monospace;
     color: var(--neon-cyan);
-    font-size: 0.75rem;
-    background: rgba(0, 210, 255, 0.1);
-    padding: 2px 8px;
+    font-size: 0.7rem;
+    background: rgba(0, 210, 255, 0.08);
+    padding: 2px 7px;
     border-radius: 3px;
-    border: 1px solid rgba(0, 210, 255, 0.2);
+    border: 1px solid rgba(0, 210, 255, 0.15);
     white-space: nowrap;
     margin-left: 8px;
+    flex-shrink: 0;
 }
 
 input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 6px;
+    height: 5px;
     border-radius: 3px;
     background: linear-gradient(to right, 
-        rgba(0, 210, 255, 0.15) 0%, 
-        rgba(0, 210, 255, 0.25) 100%);
+        rgba(0, 210, 255, 0.12) 0%, 
+        rgba(0, 210, 255, 0.22) 100%);
     outline: none;
     cursor: pointer;
-    border: 1px solid rgba(0, 210, 255, 0.15);
+    border: 1px solid rgba(0, 210, 255, 0.1);
 }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     background: var(--neon-cyan);
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0, 210, 255, 0.6),
-                inset 0 0 4px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.5),
+                inset 0 0 3px rgba(255, 255, 255, 0.3);
     transition: all 0.2s ease;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.3);
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.8),
-                inset 0 0 4px rgba(255, 255, 255, 0.4);
+    transform: scale(1.25);
+    box-shadow: 0 0 14px rgba(0, 210, 255, 0.7),
+                inset 0 0 3px rgba(255, 255, 255, 0.4);
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     background: var(--neon-cyan);
     cursor: pointer;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 8px rgba(0, 210, 255, 0.6);
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
     transition: all 0.2s ease;
 }
 
 input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.3);
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
+    transform: scale(1.25);
+    box-shadow: 0 0 14px rgba(0, 210, 255, 0.7);
+}
+
+/* ============= SEÇÃO DE VELOCIDADE ============= */
+.velocity-section {
+    border-top: 1px solid rgba(0, 210, 255, 0.08);
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.section-label {
+    font-size: 0.7rem;
+    color: var(--neon-cyan);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    opacity: 0.85;
 }
 
 /* ============= CHECKBOXES ============= */
@@ -244,130 +289,133 @@ input[type="range"]::-moz-range-thumb:hover {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    padding: 10px;
-    margin: 8px 0;
+    padding: 8px 10px;
+    margin: 6px 0;
     border-radius: 5px;
     transition: all 0.2s ease;
     cursor: pointer;
-    background: rgba(0, 210, 255, 0.03);
+    background: rgba(0, 210, 255, 0.02);
 }
 
 .checkbox-container:hover {
-    background: rgba(0, 210, 255, 0.08);
+    background: rgba(0, 210, 255, 0.06);
 }
 
 .checkbox-container input[type="checkbox"] {
     accent-color: var(--neon-cyan);
     cursor: pointer;
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
 }
 
-/* ============= BUTTONS ============= */
+/* ============= BOTÕES ============= */
 .button-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 6px;
+    margin-top: 14px;
 }
 
 .btn-hud {
     background: linear-gradient(135deg, 
-        rgba(0, 210, 255, 0.1) 0%, 
-        rgba(139, 92, 246, 0.08) 100%);
-    border: 1px solid rgba(0, 210, 255, 0.25);
+        rgba(0, 210, 255, 0.08) 0%, 
+        rgba(139, 92, 246, 0.06) 100%);
+    border: 1px solid rgba(0, 210, 255, 0.2);
     color: var(--text-primary);
     font-family: inherit;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    padding: 8px 12px;
+    padding: 7px 6px;
     cursor: pointer;
     border-radius: 5px;
     transition: all 0.25s ease;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(0, 210, 255, 0.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(0, 210, 255, 0.08);
+    white-space: nowrap;
 }
 
 .btn-hud:hover {
     background: linear-gradient(135deg, 
-        rgba(0, 210, 255, 0.25) 0%, 
-        rgba(139, 92, 246, 0.15) 100%);
+        rgba(0, 210, 255, 0.2) 0%, 
+        rgba(139, 92, 246, 0.12) 100%);
     border-color: var(--neon-cyan);
     color: #fff;
-    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3),
-                inset 0 0 10px rgba(0, 210, 255, 0.1);
+    box-shadow: 0 3px 12px rgba(0, 210, 255, 0.25),
+                inset 0 0 8px rgba(0, 210, 255, 0.08);
     transform: translateY(-1px);
 }
 
 .btn-hud:active {
     transform: translateY(0px);
-    box-shadow: 0 2px 8px rgba(0, 210, 255, 0.2);
+    box-shadow: 0 1px 6px rgba(0, 210, 255, 0.15);
 }
 
 .btn-danger {
-    grid-column: 1 / -1;
+    width: 100%;
     background: linear-gradient(135deg, 
-        rgba(255, 77, 77, 0.12) 0%, 
-        rgba(255, 77, 77, 0.08) 100%);
-    border-color: rgba(255, 77, 77, 0.35);
+        rgba(255, 77, 77, 0.1) 0%, 
+        rgba(255, 77, 77, 0.06) 100%);
+    border-color: rgba(255, 77, 77, 0.3);
 }
 
 .btn-danger:hover {
     background: linear-gradient(135deg, 
-        rgba(255, 77, 77, 0.25) 0%, 
-        rgba(255, 77, 77, 0.15) 100%);
+        rgba(255, 77, 77, 0.22) 0%, 
+        rgba(255, 77, 77, 0.12) 100%);
     border-color: var(--neon-red);
-    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3),
-                inset 0 0 10px rgba(255, 77, 77, 0.1);
+    box-shadow: 0 3px 12px rgba(255, 77, 77, 0.25),
+                inset 0 0 8px rgba(255, 77, 77, 0.08);
 }
 
 .toggle-btn.active {
     background: linear-gradient(135deg, 
-        rgba(255, 159, 67, 0.25) 0%, 
-        rgba(255, 159, 67, 0.15) 100%);
+        rgba(255, 159, 67, 0.2) 0%, 
+        rgba(255, 159, 67, 0.12) 100%);
     border-color: var(--neon-orange);
     color: var(--neon-orange);
-    box-shadow: 0 4px 15px rgba(255, 159, 67, 0.3),
-                inset 0 0 10px rgba(255, 159, 67, 0.1);
+    box-shadow: 0 3px 12px rgba(255, 159, 67, 0.25),
+                inset 0 0 8px rgba(255, 159, 67, 0.08);
 }
 
-/* ============= ALERTS ============= */
+/* ============= ALERTA (Nenhum corpo selecionado) ============= */
 .alert-text {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--neon-orange);
     font-style: italic;
-    padding: 8px;
-    background: rgba(255, 159, 67, 0.08);
+    padding: 8px 10px;
+    background: rgba(255, 159, 67, 0.06);
     border-left: 2px solid var(--neon-orange);
     border-radius: 3px;
-    margin: 10px 0;
+    margin: 6px 0;
+    line-height: 1.4;
 }
 
-/* ============= SELECTED BODY CARD ============= */
+/* ============= CARD DO CORPO SELECIONADO ============= */
 .selected-body-card {
     background: linear-gradient(135deg, 
-        rgba(0, 210, 255, 0.08) 0%, 
-        rgba(139, 92, 246, 0.06) 100%);
-    border: 1.5px solid rgba(0, 210, 255, 0.35);
+        rgba(0, 210, 255, 0.06) 0%, 
+        rgba(139, 92, 246, 0.04) 100%);
+    border: 1px solid rgba(0, 210, 255, 0.25);
     border-radius: 8px;
     padding: 12px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15),
-                inset 0 0 15px rgba(0, 210, 255, 0.05);
-    animation: bodyCardPulse 2s ease-in-out infinite;
+    margin-bottom: 14px;
+    box-shadow: 0 3px 12px rgba(0, 210, 255, 0.1),
+                inset 0 0 12px rgba(0, 210, 255, 0.03);
+    animation: bodyCardPulse 3s ease-in-out infinite;
 }
 
 @keyframes bodyCardPulse {
     0%, 100% {
-        box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15),
-                    inset 0 0 15px rgba(0, 210, 255, 0.05);
+        box-shadow: 0 3px 12px rgba(0, 210, 255, 0.1),
+                    inset 0 0 12px rgba(0, 210, 255, 0.03);
     }
     50% {
-        box-shadow: 0 6px 20px rgba(0, 210, 255, 0.25),
-                    inset 0 0 20px rgba(0, 210, 255, 0.1);
+        box-shadow: 0 5px 16px rgba(0, 210, 255, 0.18),
+                    inset 0 0 16px rgba(0, 210, 255, 0.06);
     }
 }
 
@@ -377,25 +425,27 @@ input[type="range"]::-moz-range-thumb:hover {
     align-items: center;
     margin-bottom: 10px;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 210, 255, 0.15);
+    border-bottom: 1px solid rgba(0, 210, 255, 0.12);
 }
 
 .body-id {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--neon-cyan);
     letter-spacing: 1px;
     text-transform: uppercase;
+    font-family: 'Courier New', monospace;
 }
 
 .body-mode {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--neon-green);
-    padding: 4px 8px;
-    background: rgba(46, 204, 113, 0.15);
-    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 3px 8px;
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.25);
     border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
 .body-stats {
@@ -411,30 +461,63 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .stat-value {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--neon-cyan);
     font-weight: 600;
     font-family: 'Courier New', monospace;
 }
 
-.hidden {
-    display: none;
+/* ============= LEGENDA FÍSICA ============= */
+.physics-legend {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.03) 0%, rgba(0, 210, 255, 0.02) 100%);
 }
 
-/* ============= MAIN CONTENT ============= */
+.legend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dotted rgba(0, 210, 255, 0.06);
+}
+
+.legend-item:last-child {
+    border-bottom: none;
+}
+
+.legend-formula {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--neon-yellow);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.legend-desc {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+/* ============= UTILITÁRIOS ============= */
+.hidden {
+    display: none !important;
+}
+
+/* ============= ÁREA PRINCIPAL (Canvas) ============= */
 .main-content {
     flex: 1;
     display: flex;
     overflow: hidden;
     background: var(--space-black);
     position: relative;
+    min-width: 0;
 }
 
 #cosmosCanvas {
@@ -442,7 +525,6 @@ input[type="range"]::-moz-range-thumb:hover {
     width: 100%;
     height: 100%;
     cursor: grab;
-    background: radial-gradient(circle at center, rgba(0, 50, 100, 0.1) 0%, transparent 100%);
 }
 
 #cosmosCanvas:active {
@@ -450,21 +532,18 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 /* ============= RESPONSIVO ============= */
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
     .sidebar {
-        width: 340px;
+        width: 320px;
+        min-width: 320px;
     }
 
     .sidebar-header h1 {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
     }
 
     .control-group {
-        padding: 15px;
-    }
-
-    .label-value {
-        font-size: 0.7rem;
+        padding: 14px 16px;
     }
 }
 
@@ -475,13 +554,13 @@ input[type="range"]::-moz-range-thumb:hover {
 
     .sidebar {
         width: 100%;
-        height: 40vh;
+        min-width: 100%;
+        height: 42vh;
         border-right: none;
         border-bottom: 1px solid var(--sidebar-border);
-        border-radius: 8px 8px 0 0;
     }
 
     .main-content {
-        height: 60vh;
+        height: 58vh;
     }
 }

@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmos3D: Simulador Gravitacional N-Corpos & Octrees</title>
+    <meta name="description" content="Simulação interativa de campos gravitacionais coletivos e colisões N-corpos em ambiente 3D, acelerada por Octrees com algoritmo de Barnes-Hut.">
+    <title>Simulador Gravitacional N-Corpos &amp; Octrees</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h1> COSMOS 3D</h1>
-                <p class="subtitle">Simulador Gravitacional</p>
+                <h1>SIMULADOR N-CORPOS</h1>
+                <p class="subtitle">Acelerado por Octrees</p>
             </div>
 
             <div id="hud-panel" class="hud-panel">
@@ -22,6 +23,7 @@
                     </div>
                 </div>
 
+                <!-- ════════ CONFIGURAÇÕES GLOBAIS ════════ -->
                 <div class="control-group">
                     <h3>⚙️ Configurações Globais</h3>
                     
@@ -30,7 +32,7 @@
                             <span class="label-name">População Estelar</span>
                             <span class="label-value"><span id="val-qty">7</span> corpos</span>
                         </label>
-                        <input type="range" id="slide-qty" min="1" max="20" value="10" step="1">
+                        <input type="range" id="slide-qty" min="1" max="50" value="7" step="1">
                     </div>
 
                     <div class="slider-container">
@@ -52,16 +54,17 @@
                     </div>
                 </div>
 
+                <!-- ════════ EDITOR DE CORPO ════════ -->
                 <div class="control-group" id="inspector-group">
                     <h3>🎯 Editor de Corpo</h3>
-                    <p id="no-selection-msg" class="alert-text">Clique em um corpo para modificar</p>
+                    <p id="no-selection-msg" class="alert-text">Clique em um corpo para editar suas propriedades</p>
                     
                     <div id="inspector-controls" class="hidden">
                         <!-- Card de corpo selecionado -->
                         <div class="selected-body-card">
                             <div class="body-header">
                                 <span class="body-id" id="selected-body-id">CORPO #0</span>
-                                <span class="body-mode" id="selected-body-mode">🌍 ATRAÇÃO</span>
+                                <span class="body-mode" id="selected-body-mode">GRAVIDADE</span>
                             </div>
                             <div class="body-stats">
                                 <div class="stat-item">
@@ -75,60 +78,80 @@
                             </div>
                         </div>
 
+                        <!-- Controle de Massa -->
                         <div class="slider-container">
                             <label for="slide-body-mass">
                                 <span class="label-name">Massa</span>
-                                <span class="label-value"><span id="val-body-mass">1.0</span> kg</span>
+                                <span class="label-value"><span id="val-body-mass">1.0</span></span>
                             </label>
-                            <input type="range" id="slide-body-mass" min="0.5" max="10" value="1.0" step="0.5">
+                            <input type="range" id="slide-body-mass" min="0.5" max="5000" value="5" step="0.5">
                         </div>
 
+                        <!-- Controle de Tamanho (Raio) -->
                         <div class="slider-container">
                             <label for="slide-body-size">
-                                <span class="label-name">Tamanho (Raio)</span>
-                                <span class="label-value"><span id="val-body-size">6</span> px</span>
+                                <span class="label-name">Raio (Volume → Massa)</span>
+                                <span class="label-value"><span id="val-body-size">6</span> u</span>
                             </label>
-                            <input type="range" id="slide-body-size" min="2" max="30" value="6" step="0.5">
+                            <input type="range" id="slide-body-size" min="3" max="100" value="5" step="1">
                         </div>
 
-                        <div style="border-top: 1px solid rgba(0, 210, 255, 0.1); padding-top: 12px; margin-top: 12px;">
-                            <p style="font-size: 0.75rem; color: var(--neon-cyan); margin-bottom: 10px; text-transform: uppercase;">⬅️➡️ Velocidade Direcional</p>
+                        <!-- Controles de Velocidade Direcional -->
+                        <div class="velocity-section">
+                            <p class="section-label">🚀 Velocidade Direcional</p>
                             
                             <div class="slider-container">
                                 <label for="slide-body-vx">
-                                    <span class="label-name">Eixo X (Esquerda-Direita)</span>
-                                    <span class="label-value"><span id="val-body-vx">0.0</span></span>
+                                    <span class="label-name">Eixo X <span class="axis-hint">(Esquerda ↔ Direita)</span></span>
+                                    <span class="label-value"><span id="val-body-vx">0.00</span> u/s</span>
                                 </label>
-                                <input type="range" id="slide-body-vx" min="-5" max="5" value="0" step="0.1">
+                                <input type="range" id="slide-body-vx" min="-5" max="5" value="0" step="0.05">
                             </div>
 
                             <div class="slider-container">
                                 <label for="slide-body-vy">
-                                    <span class="label-name">Eixo Y (Cima-Baixo)</span>
-                                    <span class="label-value"><span id="val-body-vy">0.0</span></span>
+                                    <span class="label-name">Eixo Y <span class="axis-hint">(Baixo ↔ Cima)</span></span>
+                                    <span class="label-value"><span id="val-body-vy">0.00</span> u/s</span>
                                 </label>
-                                <input type="range" id="slide-body-vy" min="-5" max="5" value="0" step="0.1">
+                                <input type="range" id="slide-body-vy" min="-5" max="5" value="0" step="0.05">
                             </div>
 
                             <div class="slider-container">
                                 <label for="slide-body-vz">
-                                    <span class="label-name">Eixo Z (Frente-Trás)</span>
-                                    <span class="label-value"><span id="val-body-vz">0.0</span></span>
+                                    <span class="label-name">Eixo Z <span class="axis-hint">(Frente ↔ Trás)</span></span>
+                                    <span class="label-value"><span id="val-body-vz">0.00</span> u/s</span>
                                 </label>
-                                <input type="range" id="slide-body-vz" min="-5" max="5" value="0" step="0.1">
+                                <input type="range" id="slide-body-vz" min="-5" max="5" value="0" step="0.05">
                             </div>
                         </div>
 
                         <div class="button-grid">
-                            <button id="btn-invert-dir" class="btn-hud">⬌ Inverter</button>
-                            <button id="btn-repulsion" class="btn-hud toggle-btn">💥 Repulsão</button>
-                            <button id="btn-zero-velocity" class="btn-hud">⏸️ Parar</button>
+                            <button id="btn-invert-dir" class="btn-hud" title="Inverte a direção do vetor velocidade (180°)">⬌ Inverter</button>
+                            <button id="btn-zero-velocity" class="btn-hud" title="Zera a velocidade do corpo selecionado">⏸️ Parar</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- ════════ REINICIAR ════════ -->
                 <div class="control-group">
-                    <button id="btn-reset-scene" class="btn-hud btn-danger">🔄 Reiniciar</button>
+                    <button id="btn-reset-scene" class="btn-hud btn-danger">🔄 Reiniciar Simulação</button>
+                </div>
+
+                <!-- ════════ LEGENDA FÍSICA ════════ -->
+                <div class="control-group physics-legend">
+                    <h3>📐 Modelo Físico</h3>
+                    <div class="legend-item">
+                        <span class="legend-formula">F = G·m₁·m₂/r²</span>
+                        <span class="legend-desc">Gravitação de Newton</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-formula">M = ρ·(4/3)πR³</span>
+                        <span class="legend-desc">Massa volumétrica</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-formula">O(N log N)</span>
+                        <span class="legend-desc">Barnes-Hut Octree</span>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -140,7 +163,7 @@
 
     <script src="lib/gl-matrix.js"></script>
     <script>
-        // Expor atalhos globais para o código existente que usa window.vec* / window.mat*
+        // Expor atalhos globais para gl-matrix
         window.glMatrix = window.glMatrix || window.glMatrix;
         window.vec2  = glMatrix.vec2;
         window.vec3  = glMatrix.vec3;

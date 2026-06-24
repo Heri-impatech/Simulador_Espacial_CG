@@ -1,0 +1,149 @@
+\documentclass[11pt,a4paper]{article}
+
+% Pacotes essenciais para rigor acadêmico
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{caption}
+
+% Configuração de página
+\geometry{margin=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% Configuração de exibição de código (Estética HUD Sci-Fi para JavaScript)
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{cyanCode}{rgb}{0.0,0.6,0.8}
+\definecolor{orangeCode}{rgb}{0.9,0.4,0.0}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{cyanCode}\bfseries,
+    commentstyle=\color{codegray}\italicshape,
+    stringstyle=\color{orangeCode},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    breaklines=true,
+    frame=single,
+    language=JavaScript,
+    showstringspaces=false
+}
+
+\title{\textbf{Simulação de Campos Gravitacionais Coletivos e Colisões N-Corpos em Ambiente 3D Acelerada por Octrees}}
+\author{Herivelton Guilherme Alves de Siqueira \\ \small{IMPA Tech - Bacharelado em Matemática da Tecnologia e Inovação}}
+\date{Junho de 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este relatório descreve a modelagem geométrica e implementação computacional de um simulador mecânico tri-dimensional interativo focado na dinâmica astrofísica de corpos massivos rígidos. O sistema simula interações gravitacionais mútuas induzidas pelas dimensões volumétricas dos corpos e resolve colisões puramente elásticas por meio de modelagem impulsiva. Para mitigar o custo computacional extenuante de ordem $\mathcal{O}(N^2)$ inerente ao teste de todos contra todos, o espaço euclidiano $\mathbb{R}^3$ é particionado dinamicamente utilizando uma estrutura de dados hierárquica baseada em \textit{Octrees}, otimizando a complexidade algorítmica para $\mathcal{O}(N \log N)$. A visualização é construída a partir de um pipeline analítico de projeção perspectiva suportado por matrizes de álgebra linear em ambiente web de alta performance.
+\end{abstract}
+
+\section{Introdução e Fundamentação Teórica}
+
+A simulação discreta de fenômenos da física clássica em ambientes gráficos computacionais exige a harmonização estrita entre métodos numéricos para equações diferenciais e estruturas de dados espaciais eficientes. A computação gráfica, como disciplina integradora, fundamenta-se na síntese de imagens através de modelos físico-matemáticos. Conforme preconizado por Gomes e Velho \cite{gomesvelho}, o realismo dinâmico e a coerência visual dependem não apenas de uma geometria precisa, mas também da correta modelagem da iluminação e da cinemática dos corpos no espaço bidimensional da tela.
+
+O problema de $N$-corpos, central em astrofísica e dinâmica molecular, consiste em prever o movimento individual de um grupo de $N$ partículas massivas que interagem mutuamente sob a influência de forças gravitacionais de longo alcance. Em uma abordagem de força bruta, avaliar o par de forças de Newton para cada elemento contra todos os outros acarreta uma complexidade de ordem quadrática $\mathcal{O}(N^2)$ \cite{hockney}. Em termos práticos de computação gráfica em tempo real, essa escalabilidade pobre inviabiliza resoluções de simulação que envolvam mais do que algumas centenas de partículas sob a restrição de manter taxas de quadros estáveis (como 60 \textit{Frames Per Second} - FPS) durante o \textit{rendering} assíncrono num ambiente web.
+
+Para superar esse gargalo computacional, técnicas de particionamento dinâmico do espaço euclidiano são empregadas. O espaço $\mathbb{R}^3$ é iterativamente subdividido utilizando árvores hierárquicas, método embasado nos teoremas fundamentais de geometria computacional propostos por Preparata e Shamos \cite{preparata} e robustamente estendidos para indexação de dados multidimensionais por Hanan Samet \cite{samet}. A adoção dessas estruturas reduz substancialmente a complexidade computacional para patamares viáveis como $\mathcal{O}(N \log N)$ na avaliação de forças e até $\mathcal{O}(N)$ em testes de contato local, através da poda (\textit{culling}) rigorosa de áreas não-influentes.
+
+\section{Metodologia e Arquitetura do Sistema}
+
+A arquitetura do simulador foi concebida sob o paradigma orientado a objetos em JavaScript, explorando capacidades modernas de execução assíncrona (como o \texttt{requestAnimationFrame}) e manipulação de matrizes de alta performance (\texttt{gl-matrix}). O sistema é subdividido em componentes lógicos coesos: pipeline de renderização, particionamento do espaço e o motor físico numérico.
+
+\subsection{Pipeline de Visualização e Álgebra de Projeção Perspectiva}
+
+O processo de mapeamento de entidades descritas em um espaço de coordenadas tridimensional canônico (\textit{World Space}) para os fragmentos discretos luminosos da tela (\textit{Screen Space}) requer a aplicação de um encadeamento de transformações afins. Essa sequência, amplamente detalhada por Marschner e Shirley \cite{shirley}, constitui o \textit{Graphics Pipeline}.
+
+No módulo de câmera (\texttt{js/camera.js}), o modelo visual fundamenta-se na definição de uma base ortonormal para o observador no espaço afim. A posição da câmera (\textit{Eye}) é descrita por coordenadas esféricas, facilitando uma navegação em órbita do tipo \textit{arcball} pelo raio $r$, azimute $\theta$ e elevação $\phi$:
+\begin{align}
+    x &= r \cdot \sin(\phi) \cdot \sin(\theta) \\
+    y &= r \cdot \cos(\phi) \\
+    z &= r \cdot \sin(\phi) \cdot \cos(\theta)
+\end{align}
+
+O vetor de posicionamento da câmera $\mathbf{e}$, em conjunto com o vetor do ponto de interesse $\mathbf{c}$ e o vetor \textit{up} da cena $\mathbf{u}$, são utilizados para computar os eixos do referencial local do observador (\textit{Forward}, \textit{Right}, \textit{Up}). Estes eixos formam a matriz de visualização (\textit{View Matrix}, $\mathbf{V} \in \mathbb{R}^{4 \times 4}$), responsável por aplicar a translação e rotação inversas sobre o universo, de modo a alinhar a origem ao olho do observador virtual.
+
+Para conferir o aspecto de profundidade natural (paralaxe e foreshortening), as coordenadas do espaço da câmera são pré-multiplicadas pela matriz de Projeção Perspectiva ($\mathbf{P}$), mapeando o \textit{View Frustum} (tronco de pirâmide visual definido por \textit{Near}, \textit{Far}, \textit{Aspect Ratio} e \textit{FOV}) para o cubo unitário de corte (\textit{Clip Space}):
+\begin{equation}
+    \mathbf{v}_{\text{clip}} = \mathbf{P} \cdot \mathbf{V} \cdot \mathbf{v}_{\text{world}}
+\end{equation}
+
+A etapa de renderização webGL realiza a divisão pela componente homogênea ($w$) — conhecida como divisão perspectiva ($x_c/w, y_c/w, z_c/w$) — gerando assim Coordenadas de Dispositivo Normalizadas (NDC). Essa operação matemática é o que reduz o tamanho relativo dos objetos à medida que se distanciam no eixo Z. Adicionalmente, realiza-se um \textit{Frustum Culling} implícito ou explícito, ignorando primitivas geométricas situadas fora do volume enxergável, antes da conversão \textit{Viewport} que rasteriza a projeção contínua para coordenadas discretas de pixel.
+
+\subsection{Aceleração por Octrees no Gerenciamento de Espaço e Algoritmo Barnes-Hut}
+
+Com o intuito de mitigar o custo quadrático da verificação mútua, a simulação adota a classe \texttt{OctreeNode} como estrutura central de busca geométrica espacial. Uma \textit{Octree} é a generalização tridimensional de uma \textit{Quadtree}, onde um volume cúbico inicial engloba toda a cena e é recursivamente particionado. 
+
+Sempre que a concentração populacional em um volume terminal (\textit{nó folha}) excede um limiar arbitrário (por exemplo, $N > 4$ partículas) e a altura da sub-árvore ainda é inferior ao valor de \texttt{maxDepth}, ocorre a subdivisão espacial desse nó pai em oito sub-octantes (\textit{Axis-Aligned Bounding Boxes} - AABB) perfeitamente simétricos \cite{ericson}.
+
+O algoritmo de \textbf{Barnes-Hut} aproveita esta hierarquia para aproximar os cálculos da gravidade. Em cada nó interno da árvore, precalcula-se a massa total acumulada e o baricentro (centro de massa) dos corpos contidos. Para computar a força resultante sobre uma partícula específica, a árvore é percorrida em profundidade a partir da raiz. Utiliza-se um Critério de Aceitação Multipolar (MAC - \textit{Multipole Acceptance Criterion}), tipicamente definido por:
+\begin{equation}
+    \frac{s}{d} < \theta
+\end{equation}
+Onde $s$ é a dimensão lateral do octante, $d$ é a distância da partícula ao centro de massa do octante, e $\theta$ é um parâmetro de limiar de precisão \cite{hockney}. Se a condição for satisfeita, o agrupamento inteiro de astros contido no nó é tratado matematicamente como um corpo singular massivo, poupando a necessidade de visitar seus descendentes. Caso contrário, o algoritmo desce pela árvore verificando os filhos do nó. Essa poda lógica transforma a complexidade do algoritmo de aproximação inter-corpos para o nível assintótico de $\mathcal{O}(N \log N)$.
+
+\subsection{Integração Dinâmica, Leis de Força e Métodos Numéricos}
+
+No motor da física (\texttt{js/physics.js}), a atribuição de inércia a cada esfera provém da assunção de densidade volumétrica uniforme, implicando uma massa proporcional ao cubo do seu raio macroscópico ($M = \rho \cdot \frac{4}{3}\pi R^3 \Rightarrow M \propto R^3$). 
+
+A força de mútua atração interplanetária é equacionada pela generalização vetorial da Lei da Gravitação Universal formulada por Isaac Newton. Porém, na sua forma não amortecida, a lei sofre com um defeito letal para integradores numéricos discretos: quando a distância se aproxima de zero ($\|\mathbf{r}_{ij}\| \to 0$), a força tende ao infinito, provocando arremessos incontroláveis de partículas (\textit{slingshot effect}) e o colapso dos cálculos de ponto flutuante. A solução CG padrão é a incorporação de um fator de suavização contínuo (\textit{softening factor}, $\epsilon^2$) ao denominador \cite{hockney}:
+\begin{equation}
+    \mathbf{F}_{ij} = G \frac{M_i M_j}{\|\mathbf{r}_{ij}\|^2 + \epsilon^2} \hat{\mathbf{r}}_{ij}
+\end{equation}
+
+Uma vez acumuladas as forças, a aceleração correspondente ($\mathbf{a} = \sum \mathbf{F} / M$) alimenta o método de integração numérica. Diferente do método implícito tradicional de Euler (que acumula erro de energia no sistema divergindo trajetórias rapidamente), adota-se o \textbf{Método de Euler Semi-Implícito} (ou \textit{Symplectic Euler}):
+\begin{align}
+    \mathbf{v}_{t+\Delta t} &= \mathbf{v}_t + \mathbf{a}_t \Delta t \\
+    \mathbf{x}_{t+\Delta t} &= \mathbf{x}_t + \mathbf{v}_{t+\Delta t} \Delta t
+\end{align}
+Essa pequena modificação topológica — utilizando a \textit{nova} velocidade para calcular a \textit{nova} posição — confere à integração propriedades simpléticas fundamentais, as quais preservam a energia orbital da fase espacial ao longo do tempo macroscópico de forma incrivelmente mais acurada, mantendo assim órbitas fechadas \cite{hockney}.
+
+\subsection{Resolução de Impactos por Detecção Geométrica de Colisões}
+
+Em oposição à força gravitacional, a resolução de contatos sólidos exige a identificação minuciosa de cruzamento geométrico entre duas entidades opacas. Em nosso \textit{engine}, o processo obedece à separação técnica conhecida como \textit{Broad-phase} e \textit{Narrow-phase} \cite{ericson}. 
+
+A \textit{Broad-phase} (fase ampla) é diretamente \textbf{acelerada por Octrees}. Em vez de testar todos contra todos em complexidade $\mathcal{O}(N^2)$, o algoritmo tira vantagem da indexação hierárquica construída no passo anterior. Apenas pares de esferas reportados que interceptam ou coabitam os mesmos limites espaciais (os AABBs folha da Octree) são enfileirados como candidatos viáveis, reduzindo drasticamente o número de testes. A \textit{Narrow-phase} (fase estrita) realiza o teste refinado e exato em $\mathcal{O}(1)$: avaliando se a distância ao quadrado dos centros de massa das esferas $i$ e $j$ é inferior ao quadrado da soma dos seus raios conceituais ($\|\mathbf{c}_i - \mathbf{c}_j\|^2 < (R_i + R_j)^2$), tática esta que evita a custosa operação computacional de raiz quadrada inerente ao teorema de Pitágoras.
+
+Confrontados com uma colisão, aplicam-se duas correções independentes a fim de manter a consistência rígida:
+\begin{enumerate}
+    \item \textbf{Projeção Translacional (Afastamento Geométrico):} Partículas que apresentaram interpenetração algorítmica profunda em um único \textit{frame} de tempo são forçadamente deslocadas e repulsadas fisicamente no eixo de suas respectivas normais de superfície, ponderadas pelas proporções de suas massas inertes, estancando acúmulo de energia irreal.
+    \item \textbf{Resposta de Impulso Dinâmico:} Assumindo conservação linear do \textit{momentum} do sistema fechado de dois corpos, o cálculo computa o impulso $\mathbf{J}$ com base no coeficiente de restituição elástica ($e \in [0, 1]$). Onde $e=1$ representa uma colisão perfeitamente elástica:
+    \begin{equation}
+        j = \frac{-(1 + e) \, \mathbf{v}_{\text{rel}} \cdot \mathbf{n}}{\frac{1}{M_i} + \frac{1}{M_j}}
+    \end{equation}
+    A magnitude do impulso escalar $j$ é posteriormente transformada em vetores de alteração de velocidade tangencial e normal à colisão, resultando na separação reflexiva cinemática e realista esperada dos corpos sem violação da terceira lei de Newton (ação e reação) \cite{ericson}.
+\end{enumerate}
+
+\begin{thebibliography}{99}
+
+\bibitem{gomesvelho}
+GOMES, J.; VELHO, L. \textbf{Fundamentos da Computação Gráfica}. Rio de Janeiro: IMPA, 2015.
+
+\bibitem{shirley}
+MARSCHNER, S.; SHIRLEY, P. \textbf{Fundamentals of Computer Graphics}. 5. ed. Massachusetts: A K Peters/CRC Press, 2021.
+
+\bibitem{samet}
+SAMET, H. \textbf{Foundations of Multidimensional and Metric Data Structures}. San Francisco: Morgan Kaufmann, 2006.
+
+\bibitem{ericson}
+ERICSON, C. \textbf{Real-Time Collision Detection}. San Francisco: Morgan Kaufmann, 2004.
+
+\bibitem{preparata}
+PREPARATA, F. P.; SHAMOS, M. I. \textbf{Computational Geometry: An Introduction}. New York: Springer-Verlag, 1985.
+
+\bibitem{hockney}
+HOCKNEY, R. W.; EASTWOOD, J. W. \textbf{Computer Simulation Using Particles}. London: Taylor \& Francis, 1988.
+
+\end{thebibliography}
+
+\end{document}
