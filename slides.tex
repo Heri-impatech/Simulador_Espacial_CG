@@ -1,0 +1,244 @@
+\documentclass[10pt, aspectratio=169]{beamer}
+
+% Configuração de Tema e Cores
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+
+% Pacotes essenciais
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Configuração de estilo de código (Listings para JavaScript)
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% Informações da Capa
+\title[Simulação N-Corpos e Eficiência Gráfica]{Simulação de Gravidade 3D: Da Renderização ao Desempenho}
+\subtitle{Otimização Visual e Física com Particionamento Espacial (Octrees)}
+\author[Herivelton Siqueira]{Herivelton Guilherme Alves de Siqueira}
+\institute[IMPA Tech]{
+    Bacharelado em Matemática da Tecnologia e Inovação\\
+    IMPA Tech
+}
+\date{Junho de 2026}
+
+\begin{document}
+
+% Slide 1: Capa
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% Slide 2: Introdução e Motivação
+\begin{frame}{Objetivo: A Construção de um Mundo 3D do Zero}
+    \begin{itemize}
+        \item \textbf{A Proposta:} Desenvolver um motor físico e gráfico nativo, executado puramente via navegador (\textit{Canvas 2D}), capaz de simular e renderizar a dinâmica de corpos celestes em 3D.
+        \item \textbf{O Desafio Visual:} Projetar coordenadas tridimensionais exatas do espaço "mundo" $(x, y, z)$ para o espaço bidimensional da tela do monitor $(x, y)$.
+        \item \textbf{O Desafio de Desempenho (O Gargalo):} Garantir uma taxa de atualização estável de 60 quadros por segundo (FPS). Renderizar múltiplos corpos interagindo de forma verossímil exige extrema eficiência algorítmica.
+    \end{itemize}
+\end{frame}
+
+% Slide 3: O Pipeline Gráfico e a Câmera
+\begin{frame}{O Núcleo Visual: Projeção Perspectiva}
+    \begin{block}{Simulando a Câmera Virtual}
+        Na ausência de um motor comercial (como a Unity), o projeto implementa as etapas do \textit{Pipeline Gráfico Clássico} através de transformações com matrizes matemáticas.
+    \end{block}
+    
+    \vspace{0.3cm}
+    
+    \begin{itemize}
+        \item A transformação de perspectiva obedece à regra de que \textbf{objetos mais distantes devem convergir e ser renderizados em escalas menores}.
+        \item Multiplicamos as coordenadas reais pelas Matrizes de Câmera, gerando a imersão de profundidade (3D).
+        \item \textbf{Consequência Computacional:} O processamento e a renderização dessas posições e forças a cada \textit{frame} sobrecarrega a CPU. Precisamos de estratégias de otimização em CG para a cena escalar.
+    \end{itemize}
+\end{frame}
+
+% Slide 4: Implementação da Projeção
+\begin{frame}[fragile]{Implementação: Pipeline de Projeção (\textit{camera.js})}
+    Como as matrizes transformam as coordenadas (Espaço $Mundo \rightarrow NDC$):
+\begin{lstlisting}[language=Java]
+// Transformacao linear combinada global (ViewProj)
+window.vec4.transformMat4(clip, v4, this.viewProjMatrix);
+const w = clip[3]; // Fator de escala da profundidade
+
+if (w <= 0) return null; // Clipping Plane Frontal
+
+// Divisao Perspectiva: Normalizacao para NDC [-1, 1]
+const ndcX = clip[0] / w;
+const ndcY = clip[1] / w;
+const ndcZ = clip[2] / w;
+
+// Mapeamento de Viewport (Conversao para pixels reais)
+const sx = (ndcX * 0.5 + 0.5) * this.canvas.width;
+const sy = (1.0 - (ndcY * 0.5 + 0.5)) * this.canvas.height;
+\end{lstlisting}
+    \textit{Note a Divisão Perspectiva ($/w$), crucial na Computação Gráfica para criar a ilusão de profundidade escalando pontos mais distantes.}
+\end{frame}
+
+% Slide 5: O Gargalo Computacional
+\begin{frame}{O Problema da Força Bruta: Complexidade $\mathcal{O}(N^2)$}
+    \begin{itemize}
+        \item Em uma cena física interativa, calcular a gravidade e detectar colisões segue, por padrão, um modelo ingênuo de "todos-contra-todos".
+        \item Para $N$ corpos celestes na tela, o computador realiza na ordem de $N^2$ cálculos por frame.
+        \item Se dobrarmos a população de objetos na simulação, o custo de processamento \textbf{quadruplica}. Esse modelo quadrático inviabiliza testes reais em Computação Gráfica.
+    \end{itemize}
+    
+    \begin{block}{A Necessidade Teórica}
+        Para resolver isso de forma elegante, a teoria da Computação Gráfica dita o uso de ferramentas de \textbf{Estruturas de Dados de Particionamento Espacial}.
+    \end{block}
+\end{frame}
+
+% Slide 6: Octree - A Solução de Otimização
+\begin{frame}{A Estrutura Espacial: A Octree}
+    \begin{itemize}
+        \item \textbf{O Conceito Teórico:} Uma Octree é uma estrutura em árvore que subdivide recursivamente o volume 3D total do "mundo" em 8 sub-regiões (octantes) contínuas, garantindo que cada pequena área armazene apenas uma capacidade máxima de corpos (ex: 4 corpos por folha).
+    \end{itemize}
+    
+    \begin{block}{Eficiência na Prática (Implementação no Projeto)}
+        Como evidenciado através da malha tridimensional dinâmica e brilhante no visualizador (o esqueleto da Octree), a cena 3D é fatiada dinamicamente conforme os corpos se movem, atuando como um poderoso índice espacial.
+    \end{block}
+
+    \begin{itemize}
+        \item \textbf{Resultado:} Redução abrupta no espaço de busca e varredura geométrica da cena.
+    \end{itemize}
+\end{frame}
+
+% Slide 7: Implementação do Sub-Espaço
+\begin{frame}[fragile]{Implementação: Subdivisão da Octree (\textit{octree.js})}
+    O algoritmo cria recursivamente 8 filhos limitando os objetos por região:
+\begin{lstlisting}[language=Java]
+subdivide() {
+    const nextSize = this.size / 2;
+    const quarter = this.size / 4;
+    // Cria 8 octantes combinando os eixos +/- X, Y, Z
+    const signs = [-1, 1];
+    for (const xSign of signs) {
+        for (const ySign of signs) {
+            for (const zSign of signs) {
+                this.children.push(new OctreeNode(
+                    this.cx + xSign * quarter,
+                    this.cy + ySign * quarter,
+                    this.cz + zSign * quarter,
+                    nextSize, this.depth + 1, this.maxDepth
+                ));
+            } } }
+\end{lstlisting}
+\end{frame}
+
+% Slide 8: Otimização Numérica: Algoritmo de Barnes-Hut
+\begin{frame}{Aceleração em Larga Escala: Barnes-Hut e a Octree}
+    \begin{block}{Critério de Aceitação Multipolar (MAC)}
+        Ao usar a Octree, o algoritmo de Barnes-Hut avalia a seguinte relação geométrica: $\frac{s}{d} < \theta$.
+        Onde $s$ é a largura da região, $d$ é a distância da região ao corpo focado, e $\theta$ é um limite fixo de precisão ($\approx 0.5$).
+    \end{block}
+    
+    \vspace{0.3cm}
+    
+    \begin{itemize}
+        \item \textbf{A Otimização Lógica:} Se uma aglomeração de planetas vizinhos satisfaz o MAC, eles estão distantes o bastante visual e fisicamente.
+        \item Em vez de somar vetores par a par, o motor trata aquela área agrupada da Octree como um único \textbf{Centro de Massa Virtual}.
+        \item \textbf{Eficiência Extrema:} A complexidade temporal decai de $\mathcal{O}(N^2)$ para assintóticamente $\mathcal{O}(N \log N)$. Isso garante fluidez no navegador nativo.
+    \end{itemize}
+\end{frame}
+
+% Slide 9: Implementação do MAC
+\begin{frame}[fragile]{Implementação: Avaliação MAC (\textit{octree.js})}
+    Decisão algorítmica de interagir com o nó inteiro ou adentrar em seus filhos:
+\begin{lstlisting}[language=Java]
+// MAC: s/d < theta  ->  no suficientemente distante
+if (dist > 0.001 && (this.size / dist) < theta) {
+    // Trata todo o octante como um unico corpo virtual 
+    // ancorado no centro de massa
+    let accMag = (G_SCALED * this.totalMass) / distSq;
+    
+    const ax = accMag * (dx / dist); // X
+    const ay = accMag * (dy / dist); // Y
+    const az = accMag * (dz / dist); // Z
+    
+    body.addAcceleration(ax, ay, az);
+} else {
+    // No muito proximo -> desce na arvore (maior precisao)
+    for (const child of this.children) 
+        child.accumulateForce(body, G, theta, softening);
+}
+\end{lstlisting}
+\end{frame}
+
+% Slide 10: Colisões (Broad-Phase)
+\begin{frame}{Eficiência Aplicada à Intersecção 3D (Colisões)}
+    \begin{itemize}
+        \item O teste de sobreposição de malhas e esferas é outro gargalo famoso nos Motores Gráficos 3D (\textit{Game Engines}).
+    \end{itemize}
+    
+    \begin{block}{A Abordagem \textit{Broad-Phase} via Octree}
+        Graças à Octree já calculada no ciclo do \textit{frame}, o algoritmo não permite o teste inútil de esferas que se encontram em cantos opostos da cena.
+        Ele restringe estritamente a detecção mútua aos corpos que habitam o mesmo nó-folha da árvore no espaço delimitado da malha.
+    \end{block}
+
+    \begin{itemize}
+        \item \textbf{Conclusão Visual (Narrow-Phase):} Detectada a intersecção euclidiana, opera-se a correção de posição (separação dos vértices para evitar o artefato gráfico dos corpos "engolindo" uns aos outros) e a devolução realista do rebote.
+    \end{itemize}
+\end{frame}
+
+% Slide 11: Conclusões
+\begin{frame}{Considerações Finais}
+    \begin{itemize}
+        \item O desenvolvimento deste projeto ilustra que \textbf{a excelência do desempenho (eficiência) e estruturação algorítmica é tão essencial quanto a teoria visual} em Computação Gráfica Interativa.
+        \item A escolha estratégica da \textbf{Octree e Barnes-Hut} alinhada à matemática matricial nativa, comprova a eficácia de contornar gargalos quadráticos para atingir o \textit{Real-Time}.
+        \item A implementação evidenciou, em código funcional e malha renderizável, como a ciência de particionamento e hierarquia espacial ditam o sucesso das renderizações modernas em ambientes tridimensionais escaláveis.
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    \centering
+    \textbf{Obrigado!}
+\end{frame}
+
+% Slide 12: Referências
+\begin{frame}{Referências Bibliográficas}
+    \begin{thebibliography}{9}
+        \footnotesize
+        
+        \bibitem{gomes}
+        GOMES, J.; VELHO, L. \textit{Fundamentos da Computação Gráfica}. IMPA, 2015.
+        
+        \bibitem{shirley}
+        MARSCHNER, S.; SHIRLEY, P. \textit{Fundamentals of Computer Graphics}. 5. ed. AK Peters, 2021.
+        
+        \bibitem{samet}
+        SAMET, H. \textit{Foundations of Multidimensional and Metric Data Structures}. Morgan Kaufmann, 2006.
+        
+        \bibitem{ericson}
+        ERICSON, C. \textit{Real-Time Collision Detection}. Morgan Kaufmann, 2004.
+        
+    \end{thebibliography}
+\end{frame}
+
+\end{document}

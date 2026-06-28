@@ -330,11 +330,15 @@ class OctreeNode {
             [0, 4], [1, 5], [2, 6], [3, 7]   // Arestas conectoras
         ];
 
-        // Opacidade varia com a profundidade: nós mais profundos são mais visíveis
-        // (pois são menores e representam regiões mais refinadas)
-        const alpha = Math.min(0.6, 0.08 + (this.depth * 0.06));
-        ctx.strokeStyle = `rgba(0, 210, 255, ${alpha})`;
-        ctx.lineWidth = Math.max(0.5, 1.5 - this.depth * 0.15);
+        // Refinamento Visual: Cores mais vibrantes, espessura maior e variação
+        // de matiz (hue) para evidenciar a estrutura da malha Octree.
+        // A cor varia de ciano (nós maiores/rasos) para magenta/roxo (nós menores/profundos)
+        const hue = 190 + (this.depth * 20); 
+        const alpha = Math.min(0.9, 0.3 + (this.depth * 0.1));
+        ctx.strokeStyle = `hsla(${hue}, 100%, 65%, ${alpha})`;
+        
+        // Linhas mais grossas na raiz, afinando levemente nas folhas
+        ctx.lineWidth = Math.max(1.0, 2.5 - this.depth * 0.25);
 
         // Desenha apenas arestas onde AMBOS os vértices foram projetados com sucesso
         for (const [i, j] of edges) {
